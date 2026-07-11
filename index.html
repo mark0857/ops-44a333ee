@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="潮牛殿SOP">
+<meta name="theme-color" content="#F97316">
+<title>潮牛殿 開閉店 SOP</title>
+<style>
+  :root{
+    --orange:#F97316; --orange-soft:#FFF3E8; --orange-line:#FCD9B6;
+    --ink:#1F2430; --sub:#8A93A3; --line:#EDEFF3; --bg:#F7F8FA; --card:#fff;
+    --ok:#16A34A; --ok-soft:#E7F6EC;
+    --shadow:0 6px 20px rgba(23,30,45,.06);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.5;
+    padding-bottom:120px;
+  }
+  .wrap{max-width:720px;margin:0 auto;padding:0 16px}
+
+  /* header */
+  header{padding:20px 16px 6px}
+  .brand{display:flex;align-items:center;gap:12px;max-width:720px;margin:0 auto}
+  .logo{width:52px;height:52px;border-radius:16px;background:var(--orange);
+    display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:var(--shadow)}
+  .brand h1{font-size:22px;margin:0;font-weight:800;letter-spacing:.5px}
+  .brand .tag{font-size:12px;color:var(--sub);margin-top:2px;font-weight:600}
+
+  /* role + shift tabs */
+  .tabs{display:flex;gap:8px;background:var(--orange-soft);border-radius:16px;padding:6px;margin:14px 0}
+  .tabs.role{margin-top:16px}
+  .tab{flex:1;text-align:center;padding:11px 6px;border-radius:12px;border:none;background:transparent;
+    font-size:15px;font-weight:700;color:var(--orange);cursor:pointer;transition:.15s;font-family:inherit}
+  .tab.active{background:#fff;color:var(--orange);box-shadow:0 2px 8px rgba(249,115,22,.18)}
+  .shifts{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;margin-bottom:6px}
+  .shift{white-space:nowrap;padding:9px 16px;border-radius:999px;border:1.5px solid var(--line);
+    background:#fff;font-size:14px;font-weight:700;color:var(--sub);cursor:pointer;transition:.15s;font-family:inherit}
+  .shift.active{border-color:var(--orange);color:var(--orange);background:var(--orange-soft)}
+
+  /* progress */
+  .progress{background:var(--card);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow);margin:6px 0 14px}
+  .progress .row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+  .progress .lbl{font-weight:800;font-size:15px}
+  .progress .num{font-weight:800;font-size:15px;color:var(--orange)}
+  .progress .num.done{color:var(--ok)}
+  .bar{height:10px;border-radius:999px;background:var(--line);overflow:hidden}
+  .bar > i{display:block;height:100%;width:0;background:var(--orange);border-radius:999px;transition:width .25s}
+  .bar > i.done{background:var(--ok)}
+
+  /* completed-by */
+  .doer{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:14px;
+    padding:10px 14px;box-shadow:var(--shadow);margin-bottom:14px;flex-wrap:wrap}
+  .doer label{font-weight:700;font-size:14px;color:var(--sub);white-space:nowrap}
+  .selwrap{flex:1;display:flex;align-items:center;min-width:0}
+  .doer select{flex:1;border:none;outline:none;font-size:16px;font-weight:600;font-family:inherit;background:transparent;color:var(--ink);min-width:0;-webkit-appearance:none;appearance:none;cursor:pointer}
+  .doer select.empty{color:#C3C9D4;font-weight:400}
+  .caret{color:var(--sub);font-size:12px;margin-left:4px;pointer-events:none}
+  .doer input{flex-basis:100%;border:none;outline:none;font-size:16px;font-family:inherit;background:var(--bg);
+    color:var(--ink);min-width:0;border-radius:10px;padding:10px 12px;margin-top:4px}
+  .doer input::placeholder{color:#C3C9D4}
+
+  /* section */
+  .section{margin-bottom:16px}
+  .section h2{font-size:14px;color:var(--orange);font-weight:800;margin:0 0 8px 2px;
+    display:flex;align-items:center;gap:6px}
+  .cards{background:var(--card);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+
+  .item{display:flex;align-items:flex-start;gap:12px;padding:15px 14px;border-top:1px solid var(--line);cursor:pointer;transition:background .12s}
+  .item:first-child{border-top:none}
+  .item:active{background:#FAFBFC}
+  .box{flex:none;width:26px;height:26px;border-radius:9px;border:2px solid #D7DCE4;margin-top:1px;
+    display:flex;align-items:center;justify-content:center;transition:.15s;background:#fff}
+  .box svg{width:15px;height:15px;opacity:0;transform:scale(.5);transition:.15s}
+  .item.checked .box{background:var(--ok);border-color:var(--ok)}
+  .item.checked .box svg{opacity:1;transform:scale(1)}
+  .item.checked .txt{color:var(--sub);text-decoration:line-through;text-decoration-color:#CBD2DC}
+  .body{flex:1;min-width:0}
+  .meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px}
+  .chip{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;line-height:1.5}
+  .chip.area{background:var(--orange-soft);color:#C15C10;border:1px solid var(--orange-line)}
+  .chip.time{background:#EEF2FF;color:#4351B5}
+  .txt{font-size:15.5px;font-weight:600;word-break:break-word}
+
+  /* footer action bar */
+  .actionbar{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.92);
+    backdrop-filter:saturate(180%) blur(12px);-webkit-backdrop-filter:saturate(180%) blur(12px);
+    border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom));z-index:20}
+  .actionbar .inner{max-width:720px;margin:0 auto;display:flex;gap:10px}
+  .btn{flex:1;border:none;border-radius:14px;padding:15px;font-size:16px;font-weight:800;font-family:inherit;cursor:pointer;transition:.15s}
+  .btn-line{background:#06C755;color:#fff;box-shadow:0 6px 16px rgba(6,199,85,.28)}
+  .btn-line:active{transform:translateY(1px)}
+  .btn-ghost{flex:none;width:56px;background:#fff;border:1.5px solid var(--line);color:var(--sub);font-size:20px}
+
+  /* sheet */
+  .mask{position:fixed;inset:0;background:rgba(20,25,35,.45);opacity:0;pointer-events:none;transition:.2s;z-index:40}
+  .mask.show{opacity:1;pointer-events:auto}
+  .sheet{position:fixed;left:0;right:0;bottom:0;background:#fff;border-radius:22px 22px 0 0;z-index:45;
+    padding:18px 16px calc(18px + env(safe-area-inset-bottom));transform:translateY(102%);transition:.28s cubic-bezier(.2,.8,.2,1);
+    max-width:720px;margin:0 auto;box-shadow:0 -8px 30px rgba(0,0,0,.15)}
+  .sheet.show{transform:translateY(0)}
+  .sheet .grab{width:40px;height:5px;border-radius:999px;background:#E2E6EC;margin:0 auto 12px}
+  .sheet h3{margin:0 0 4px;font-size:18px;font-weight:800}
+  .sheet .sub{font-size:13px;color:var(--sub);margin-bottom:12px}
+  .sheet .preview{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:12px 14px;
+    font-size:14px;line-height:1.65;white-space:pre-wrap;word-break:break-word;max-height:38vh;overflow:auto;margin-bottom:14px}
+  .sheet .btns{display:flex;gap:10px}
+  .sheet a.sbtn,.sheet button.sbtn{flex:1;text-align:center;text-decoration:none;border:none;border-radius:14px;
+    padding:15px;font-size:16px;font-weight:800;font-family:inherit;cursor:pointer;display:block}
+  .sbtn.copy{background:#fff;border:1.5px solid var(--line);color:var(--ink)}
+  .sbtn.line{background:#06C755;color:#fff}
+  .sheet .close{margin-top:10px;text-align:center;color:var(--sub);font-size:14px;font-weight:600;cursor:pointer;padding:8px}
+
+  /* toast */
+  .toast{position:fixed;left:50%;bottom:150px;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;font-weight:600;
+    opacity:0;pointer-events:none;transition:.25s;z-index:50;max-width:88vw;text-align:center}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* print copy (hidden on screen) */
+  .printonly{display:none}
+
+  @media print{
+    :root{--shadow:none}
+    body{background:#fff;padding:0}
+    header,.tabs,.shifts,.progress,.doer,#app,.actionbar,.toast{display:none !important}
+    .printonly{display:block}
+    .p-shift{page-break-inside:avoid;margin-bottom:18px}
+    .p-title{font-size:17px;font-weight:800;border-bottom:2px solid #000;padding-bottom:3px;margin:14px 0 8px}
+    .p-sec{font-size:13px;font-weight:800;margin:8px 0 3px;color:#000}
+    .p-item{display:flex;gap:8px;font-size:12px;padding:2.5px 0;align-items:flex-start}
+    .p-box{flex:none;width:13px;height:13px;border:1.4px solid #000;border-radius:2px;margin-top:2px}
+    .p-meta{color:#333;font-weight:700;margin-right:4px}
+    .p-doer{font-size:12px;margin-top:6px}
+    .p-page{page-break-after:always}
+    h1.p-h{font-size:20px;margin:0 0 4px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">🐂</div>
+    <div>
+      <h1>潮牛殿 · 開閉店 SOP</h1>
+      <div class="tag">點一下打勾 · 完成後回報 LINE</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="tabs role" id="roleTabs"></div>
+  <div class="shifts" id="shiftTabs"></div>
+
+  <div class="progress">
+    <div class="row"><span class="lbl" id="pLbl">進度</span><span class="num" id="pNum">0 / 0</span></div>
+    <div class="bar"><i id="pBar"></i></div>
+  </div>
+
+  <div class="doer">
+    <label>完成人</label>
+    <div class="selwrap"><select id="doerSel"></select><span class="caret">▾</span></div>
+    <input id="doerOther" type="text" placeholder="輸入名字（臨時人員）" autocomplete="off" style="display:none">
+  </div>
+
+  <div id="app"></div>
+</div>
+
+<div class="actionbar">
+  <div class="inner">
+    <button class="btn-ghost btn" id="resetBtn" title="重設本班">↺</button>
+    <button class="btn btn-line" id="lineBtn">完成回報 → 送 LINE</button>
+  </div>
+</div>
+
+<div class="mask" id="mask"></div>
+<div class="sheet" id="sheet">
+  <div class="grab"></div>
+  <h3 id="sheetTitle">回報預覽</h3>
+  <div class="sub">確認內容後,按「開啟 LINE」選潮牛群組送出給主管</div>
+  <div class="preview" id="preview"></div>
+  <div class="btns">
+    <button class="sbtn copy" id="copyBtn">複製訊息</button>
+    <a class="sbtn line" id="lineLink" href="#" target="_blank" rel="noopener">開啟 LINE</a>
+  </div>
+  <div class="close" id="closeSheet">關閉</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- printable version -->
+<div class="printonly" id="printArea"></div>
+
+<script>
+/* ---------------- SOP DATA ---------------- */
+const P = ["私人物品收納","制服穿戴整齊","儀容整理完成","手部清潔消毒","手機調整規範模式","已完成後打卡"];
+const personal = {title:"① 個人狀態整頓（提前5分鐘）", items:P.map(t=>({x:t}))};
+
+const DATA = {
+  "外場":{
+    "開早":{ type:"開店", sections:[
+      personal,
+      {title:"② 開店環境巡檢", items:[
+        {t:"10:30",a:"外場/門口",x:"將橘色廚餘桶放置廚房定位"},
+        {t:"10:30",a:"設備/系統",x:"燈光開啟（人行道、空白那格不用開）"},
+        {t:"10:30",a:"外場",x:"室內外地板整潔"},
+        {t:"10:30",a:"客席區",x:"桌卡桌號確認，桌面整潔"},
+        {t:"10:30",a:"客席區",x:"米酒和紙巾是否補滿，米酒確定無果蠅飛入"},
+        {t:"10:30",a:"客席區",x:"座椅擺放整齊無雜物"},
+        {t:"10:30",a:"客席區",x:"醬料區補滿（含醬料碗、水杯），裝好檸檬水"},
+        {t:"10:30",a:"設備/系統",x:"確認錢櫃內金額（15000）"},
+        {t:"10:30",a:"設備/系統",x:"確認當日訂位數量及是否有特殊需求，並與內場溝通"},
+        {t:"10:50",a:"客席區",x:"確認當日訂位 setting 好餐具數量（30套）及餐具整潔、菜單擺放"},
+        {t:"10:51",a:"外場/門口",x:"金雞的水杯換上乾淨飲用水"},
+        {t:"10:51",a:"外場/門口",x:"確認地板清潔"},
+        {t:"10:51",a:"廁所區",x:"地板、馬桶及洗手台整潔"},
+        {t:"10:51",a:"廁所區",x:"擦手紙和漱口水補滿"},
+        {t:"10:51",a:"設備/系統",x:"開啟外送系統（確定是否有當日停售品項）"},
+        {t:"11:00",a:"外場/門口",x:"大門玻璃乾淨無明顯手印"},
+        {t:"11:00",a:"門口",x:"菸灰缸、傘架定位"},
+        {t:"11:00",a:"設備/系統",x:"音響連結藍芽設備播放音樂並確認音量適中"},
+      ]},
+      {title:"③ 餐前準備（11:01–11:30）", items:[
+        {a:"套餐湯碗SETTING",x:"薑絲、洋蔥碎、牛肉10g（需確認肉品無異味）、白芝麻"},
+        {a:"外帶湯碗",x:"薑絲、洋蔥碎、牛肉10g（需確認無異味）、白芝麻（5份）"},
+        {a:"三樣小菜定位",x:"確認當天小菜內容（需試吃），先進先出（各30份）"},
+        {a:"湯壺預備",x:"加熱壺湯量避免過滿，另備一壺加湯壺"},
+        {a:"甜點準備",x:"冰箱準備四盤的當日甜湯"},
+        {a:"擺放套餐內容",x:"托盤四樣備品（紙巾×1、濕紙巾×1、筷子、湯匙）+ 三樣小菜和湯碗"},
+        {a:"特別注意",x:"食材當日要確認過口味與品質"},
+      ]},
+    ]},
+    "中休・下開":{ type:"中休", sections:[
+      {title:"中休下開檢查（14:30）", items:[
+        {a:"廚房/醬料區",x:"中休時鐵門關閉至一半"},
+        {x:"中休時間電燈、音樂（含門口電子看板）全關閉"},
+        {x:"餐具全部清潔完畢且擦乾歸位"},
+        {x:"推車的廚餘桶拿到廚房倒除洗淨掛回推車"},
+        {x:"木托盤噴酒精擦乾淨，setting 好30套餐具（紙巾濕巾筷子湯匙）隔日備用"},
+        {x:"地板掃拖"},
+        {x:"抹布沙拉脫清洗晾乾"},
+        {x:"廁所清潔（牆面、馬桶、洗手台、地面、鏡子）補充廁紙、漱口水、洗手乳"},
+        {x:"確認晚上訂位數量及是否有特殊需求"},
+        {x:"確認醬料區食材是否要補充並告知內場"},
+      ]},
+    ]},
+    "閉店":{ type:"閉店", sections:[
+      {title:"閉店檢查", items:[
+        {a:"廚房/醬料區",x:"餐具收撤、清洗（湯區勺子、濾網、醬料區湯匙及夾子、加湯壺…等）"},
+        {a:"外場冰箱",x:"確認冰箱飲料品項"},
+        {a:"中/內場冰箱",x:"確認食材品項"},
+        {a:"外場",x:"補充酒精、泡泡水瓶至8分滿"},
+        {a:"廚房",x:"抹布用沙拉脫清洗乾淨晾乾"},
+        {x:"餐車廚餘桶拿到廚房倒除並清潔晾乾"},
+        {x:"餐車垃圾桶拿到外場倒除並清潔晾乾"},
+        {x:"所有桌面清潔（酒精、桌卡、面紙擺放定位）"},
+        {x:"醬料區食材（非醬類）用紙巾覆蓋並封上保鮮膜及加蓋"},
+        {x:"三壺醬料（醬油、香油、白醋）收到下面冰箱，冷水壺倒出並清潔晾乾"},
+        {x:"垃圾及回收收撤（男女廁所共三個＋廚房兩個＋推車），並套上新垃圾袋"},
+        {x:"最後總整理，所有餐具擦乾歸位。若太多餐具來不及擦乾復位，於群組告知隔日早班同仁安排開早時間"},
+        {x:"收撤傘架、菸灰缸、電子看板"},
+        {x:"櫃台收支結帳：確認今日金額（總額/外送/信用卡），列印小結、關帳、信用卡三張單拍照備存，釘一起放入錢櫃（小結1、關帳2、信用卡3），取出今日營收，錢櫃保留15000預備金"},
+        {x:"Key 工作日誌、收入單上傳群組"},
+        {x:"店內電話、iPad 充電"},
+        {x:"設施設備關閉：電源、瓦斯管線、抽風機關閉"},
+      ]},
+    ]},
+  },
+
+  "內場":{
+    "開早":{ type:"開店", sections:[
+      personal,
+      {title:"② 開場（10:30–11:30）", items:[
+        {a:"定位",x:"將橘色廚餘桶、廚餘桶放置廚房，套上垃圾袋"},
+        {a:"設備",x:"開洗碗機總電源，插上水塞、濾網後放下，按 Power、ready"},
+        {a:"湯區",x:"開啟上方電燈；每週一按 SOP 開湯，其餘天數將湯加熱煮滾後小火，隨時撈除油渣"},
+        {a:"煮飯",x:"米洗兩次瀝乾倒入飯鍋，米:水 1:1.2 加水，加沙拉油按下煮飯（記得插電）；約30分鐘跳起後翻鬆再悶保溫"},
+        {a:"鴨肉區",x:"鴨肉取出放電磁爐按火鍋鍵，煮滾後轉保溫，油蔥酥、蜜糖醬在旁備用"},
+        {a:"煮麵區",x:"止水閥開啟後放水，開火將水煮滾（兩格），保持小水量避免燒乾"},
+        {a:"小菜",x:"依當日師傅準備小菜，三種各30份，另拿三個小鐵碗裝備外送用"},
+        {a:"確認訂位",x:"確認訂位，準備珠寶盒 N+2 份，是否有特殊需求（如寵物餐）"},
+        {a:"補充備品",x:"確認當天訂位準備菜盤所需蔬菜清洗、製備"},
+        {a:"補充醬料區",x:"確認外場醬料區是否各備一份在下面冰箱（蔥花、洋蔥碎、辣椒、香菜）"},
+      ]},
+    ]},
+    "下休・中開":{ type:"中休", sections:[
+      {title:"下休中開檢查", items:[
+        {a:"煮麵台",x:"煮麵台關火，空班後開啟"},
+        {a:"湯區",x:"關閉上方電燈，空班後開啟，全部湯品只留母火"},
+        {a:"餐具",x:"餐具全部清潔完畢、歸位"},
+        {a:"確認品項",x:"確認冰箱各品項是否需備料，空盒補足，快用完的請事先叫貨"},
+        {a:"確認晚上訂位",x:"確認訂位，準備珠寶盒 N+2 份，是否有特殊需求（如寵物餐）"},
+      ]},
+    ]},
+    "閉店":{ type:"閉店", sections:[
+      {title:"閉店檢查", items:[
+        {a:"湯區",x:"所有湯品煮滾後熄火，加蓋，爐台刷洗"},
+        {a:"中場",x:"所有物品清潔洗滌，桌面清潔"},
+        {a:"鴨肉區",x:"鴨肉封膜，連同油蔥酥、梅醬放入冰箱"},
+        {a:"飯鍋",x:"剩飯撈起放塑膠袋鋪平放冰箱，飯鍋、墊子洗淨晾乾"},
+        {a:"洗滌區",x:"所有餐具洗淨歸位，廚餘桶、髒碗籃也要過機器"},
+        {a:"洗碗機",x:"全部確認洗完後拿起濾網，拔除止水閥，關閉電源及總電源"},
+        {a:"地板清潔",x:"洗滌區地板刷洗乾淨，中場地板掃脫"},
+        {a:"垃圾廚餘",x:"廚餘打包加蓋放門口，所有垃圾集中大橘色垃圾桶，打包加蓋放門口"},
+        {a:"總確認",x:"確認所有火源、抽風機、電源關閉完成"},
+      ]},
+    ]},
+  },
+};
+
+/* ---------------- CONFIG ---------------- */
+const STORE = "潮牛殿創始店";
+const STAFF = ["孟竹","元劭","益志","垂伶","彥伶","馬克"];
+
+/* ---------------- STATE ---------------- */
+const CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
+const roles = Object.keys(DATA);
+let role = roles[0];
+let shift = Object.keys(DATA[role])[0];
+
+function today(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function keyFor(r,s){ return `cnd::${today()}::${r}::${s}`; }
+function load(r,s){ try{return JSON.parse(localStorage.getItem(keyFor(r,s))||"{}")}catch(e){return {}} }
+function save(r,s,obj){ try{localStorage.setItem(keyFor(r,s),JSON.stringify(obj))}catch(e){} }
+function loadDoer(){ try{return localStorage.getItem("cnd::doer::"+today())||""}catch(e){return ""} }
+function saveDoer(v){ try{localStorage.setItem("cnd::doer::"+today(),v)}catch(e){} }
+
+/* ---------------- RENDER ---------------- */
+const $ = s=>document.querySelector(s);
+
+function itemId(si,ii){ return si+"-"+ii; }
+
+function renderRoleTabs(){
+  $("#roleTabs").innerHTML = roles.map(r=>
+    `<button class="tab ${r===role?"active":""}" data-r="${r}">${r}</button>`).join("");
+}
+function renderShiftTabs(){
+  const ss = Object.keys(DATA[role]);
+  if(!ss.includes(shift)) shift = ss[0];
+  $("#shiftTabs").innerHTML = ss.map(s=>
+    `<button class="shift ${s===shift?"active":""}" data-s="${s}">${s}</button>`).join("");
+}
+
+function renderList(){
+  const conf = DATA[role][shift];
+  const state = load(role,shift);
+  let html = "";
+  conf.sections.forEach((sec,si)=>{
+    html += `<div class="section"><h2>${sec.title}</h2><div class="cards">`;
+    sec.items.forEach((it,ii)=>{
+      const id = itemId(si,ii);
+      const on = !!state[id];
+      const meta = [];
+      if(it.t) meta.push(`<span class="chip time">${it.t}</span>`);
+      if(it.a) meta.push(`<span class="chip area">${it.a}</span>`);
+      html += `<div class="item ${on?"checked":""}" data-id="${id}">
+        <div class="box">${CHECK}</div>
+        <div class="body">
+          ${meta.length?`<div class="meta">${meta.join("")}</div>`:""}
+          <div class="txt">${it.x}</div>
+        </div></div>`;
+    });
+    html += `</div></div>`;
+  });
+  $("#app").innerHTML = html;
+  updateProgress();
+}
+
+function allItems(){ return DATA[role][shift].sections.reduce((a,s)=>a+s.items.length,0); }
+function doneCount(){ const st=load(role,shift); return Object.values(st).filter(Boolean).length; }
+
+function updateProgress(){
+  const total=allItems(), done=doneCount();
+  const pct = total? Math.round(done/total*100):0;
+  $("#pLbl").textContent = `${role} · ${shift}`;
+  const num=$("#pNum"), bar=$("#pBar");
+  num.textContent = `${done} / ${total}`;
+  bar.style.width = pct+"%";
+  const complete = done===total && total>0;
+  num.classList.toggle("done",complete);
+  bar.classList.toggle("done",complete);
+}
+
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2200); }
+
+/* ---------------- EVENTS ---------------- */
+$("#roleTabs").addEventListener("click",e=>{const b=e.target.closest("[data-r]");if(!b)return;role=b.dataset.r;renderRoleTabs();renderShiftTabs();renderList();});
+$("#shiftTabs").addEventListener("click",e=>{const b=e.target.closest("[data-s]");if(!b)return;shift=b.dataset.s;renderShiftTabs();renderList();});
+$("#app").addEventListener("click",e=>{
+  const it=e.target.closest(".item"); if(!it)return;
+  const id=it.dataset.id; const st=load(role,shift);
+  st[id]=!st[id]; save(role,shift,st);
+  it.classList.toggle("checked",st[id]);
+  updateProgress();
+});
+/* ---- 完成人 dropdown ---- */
+const doerSel=$("#doerSel"), doerOther=$("#doerOther");
+doerSel.innerHTML = `<option value="" disabled selected>選擇完成人</option>`
+  + STAFF.map(n=>`<option value="${n}">${n}</option>`).join("")
+  + `<option value="__other">其他（手動輸入）</option>`;
+function syncDoerUI(){
+  doerSel.classList.toggle("empty", !doerSel.value);
+  doerOther.style.display = doerSel.value==="__other" ? "block":"none";
+}
+function currentDoer(){
+  if(doerSel.value==="__other") return (doerOther.value||"").trim();
+  return doerSel.value||"";
+}
+doerSel.addEventListener("change",()=>{ syncDoerUI(); saveDoer(doerSel.value==="__other"?("__other::"+(doerOther.value||"")):doerSel.value); });
+doerOther.addEventListener("input",()=>saveDoer("__other::"+doerOther.value));
+(function initDoer(){
+  const v=loadDoer();
+  if(v && v.startsWith("__other::")){ doerSel.value="__other"; doerOther.value=v.slice(9); }
+  else if(v && STAFF.includes(v)){ doerSel.value=v; }
+  syncDoerUI();
+})();
+
+$("#resetBtn").addEventListener("click",()=>{
+  if(confirm(`確定要清空「${role} · ${shift}」的所有打勾嗎？`)){
+    save(role,shift,{}); renderList(); toast("已重設本班");
+  }
+});
+
+/* build LINE report + open share */
+function buildMessage(){
+  const conf=DATA[role][shift], st=load(role,shift);
+  const total=allItems(); let done=0; const undone=[];
+  conf.sections.forEach((sec,si)=>sec.items.forEach((it,ii)=>{
+    if(st[itemId(si,ii)]) done++; else undone.push(it.x);
+  }));
+  const d=new Date();
+  const wd=["日","一","二","三","四","五","六"][d.getDay()];
+  const date=`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,"0")}/${String(d.getDate()).padStart(2,"0")}（${wd}）`;
+  const time=`${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+  const doer=currentDoer()||"（未選）";
+  const cat = conf.type==="閉店"?"閉店回報":(conf.type==="中休"?"中休回報":"開店回報");
+  let msg = `【${STORE}・${cat}】\n`;
+  msg += `店名：${STORE}\n日期：${date}\n班別：${role} ${shift}\n完成人：${doer}\n時間：${time}\n`;
+  msg += (done===total)? `進度：${done}/${total} ✅ 全部完成` : `進度：${done}/${total} ⚠️ 尚有 ${total-done} 項未完成`;
+  if(undone.length){
+    msg += `\n\n未完成項目：`;
+    undone.slice(0,15).forEach(u=>msg+=`\n・${u.length>28?u.slice(0,28)+"…":u}`);
+    if(undone.length>15) msg+=`\n…等共 ${undone.length} 項`;
+  }
+  return {msg,done,total};
+}
+
+let currentMsg="";
+function openSheet(){ $("#mask").classList.add("show"); $("#sheet").classList.add("show"); }
+function closeSheet(){ $("#mask").classList.remove("show"); $("#sheet").classList.remove("show"); }
+
+$("#lineBtn").addEventListener("click",()=>{
+  const {msg,done,total}=buildMessage();
+  const show=()=>{
+    currentMsg=msg;
+    $("#preview").textContent=msg;
+    $("#sheetTitle").textContent = done===total ? "回報預覽 ✅ 全部完成" : `回報預覽 ⚠️ ${total-done} 項未完成`;
+    $("#lineLink").href="https://line.me/R/msg/text/?"+encodeURIComponent(msg);
+    openSheet();
+  };
+  if(done<total){
+    if(confirm(`還有 ${total-done} 項未完成，確定要現在回報嗎？\n（未完成項目會列在訊息中）`)) show();
+  } else show();
+});
+$("#copyBtn").addEventListener("click",()=>{
+  const done=()=>toast("已複製,可貼到 LINE 群組");
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(currentMsg).then(done).catch(fallbackCopy);
+  } else fallbackCopy();
+  function fallbackCopy(){
+    const ta=document.createElement("textarea");ta.value=currentMsg;ta.style.position="fixed";ta.style.opacity="0";
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand("copy");done();}catch(e){toast("複製失敗,請長按訊息手動複製");}
+    document.body.removeChild(ta);
+  }
+});
+$("#lineLink").addEventListener("click",()=>{ setTimeout(closeSheet,300); });
+$("#closeSheet").addEventListener("click",closeSheet);
+$("#mask").addEventListener("click",closeSheet);
+
+/* ---------------- PRINT VERSION ---------------- */
+function buildPrint(){
+  let h=`<h1 class="p-h">潮牛殿 · 開閉店 SOP 檢查表</h1><div style="font-size:12px;color:#333;margin-bottom:10px">日期：＿＿＿＿／＿＿／＿＿　　（紙本檢查表，逐項打勾）</div>`;
+  roles.forEach((r,ri)=>{
+    Object.keys(DATA[r]).forEach(s=>{
+      const conf=DATA[r][s];
+      h+=`<div class="p-shift"><div class="p-title">${r}　${s}</div>`;
+      conf.sections.forEach(sec=>{
+        h+=`<div class="p-sec">${sec.title}</div>`;
+        sec.items.forEach(it=>{
+          const m=[it.t?`[${it.t}]`:"",it.a?`(${it.a})`:""].filter(Boolean).join(" ");
+          h+=`<div class="p-item"><span class="p-box"></span><span><span class="p-meta">${m}</span>${it.x}</span></div>`;
+        });
+      });
+      h+=`<div class="p-doer">完成人：＿＿＿＿＿＿＿＿＿　時間：＿＿：＿＿　異常回報：＿＿＿＿＿＿＿＿＿＿＿＿</div></div>`;
+    });
+    if(ri<roles.length-1) h+=`<div class="p-page"></div>`;
+  });
+  $("#printArea").innerHTML=h;
+}
+
+/* ---------------- INIT ---------------- */
+renderRoleTabs(); renderShiftTabs(); renderList(); buildPrint();
+</script>
+</body>
+</html>
