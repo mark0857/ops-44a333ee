@@ -889,8 +889,9 @@
       readonly=true;
       document.body.classList.add("ro");
       document.getElementById("brushbar").style.display="none";
-      document.querySelector(".tools").style.display="none";
       document.querySelector(".mnav").style.display="none";
+      // 唯讀檢視：隱藏編輯類按鈕，但保留「下載 Excel／CSV／列印」（此頁非沙箱，下載正常）
+      ["btnStaff","btnCode","btnClearM","btnShare","btnHours"].forEach(function(id){var e=document.getElementById(id);if(e)e.style.display="none";});
       document.getElementById("bannerTxt").textContent=
         state.company+"【潮牛殿】民國"+(view.y-1911)+"年"+view.m+"月 班表　·　檢視模式（唯讀）";
       document.getElementById("ownCopy").setAttribute("href",location.origin+location.pathname);
