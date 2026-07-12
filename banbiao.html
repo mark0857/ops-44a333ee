@@ -1,0 +1,728 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>潮牛殿 · 月排班表</title>
+<style>
+  :root{
+    --paper:#FBF7F1; --surface:#FFFFFF; --surface-2:#F4EEE5; --surface-3:#EDE4D6;
+    --ink:#241F1A; --ink-soft:#6E635A; --muted:#9A8E82;
+    --line:#E6DCD0; --line-strong:#D3C4B2;
+    --accent:#A93226; --accent-ink:#7E251C; --accent-soft:#F6E4E0;
+    --gold:#B0863B;
+    --ok:#3E7C5A; --warn:#B8791C; --under:#C0392B;
+    --rest:#F3C623; --rest-ink:#6b5310;   /* 休/年 黃 */
+    --li:#D64545;                           /* 例 紅 */
+    --shadow:0 1px 2px rgba(60,40,20,.06),0 10px 28px rgba(60,40,20,.07);
+    --radius:12px;
+    --font:"PingFang TC","Microsoft JhengHei","Noto Sans TC",-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --paper:#171310; --surface:#211B16; --surface-2:#2A231C; --surface-3:#342B22;
+      --ink:#F2EAE0; --ink-soft:#C3B6A8; --muted:#8E8073;
+      --line:#352C24; --line-strong:#4A3D31;
+      --accent:#E07566; --accent-ink:#EF9384; --accent-soft:#3A241F;
+      --gold:#CDA35C; --ok:#6FBF8F; --warn:#E0AE55; --under:#E8756A;
+      --rest:#C8A32B; --rest-ink:#231c08; --li:#E06262;
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="light"]{
+    --paper:#FBF7F1; --surface:#FFFFFF; --surface-2:#F4EEE5; --surface-3:#EDE4D6;
+    --ink:#241F1A; --ink-soft:#6E635A; --muted:#9A8E82; --line:#E6DCD0; --line-strong:#D3C4B2;
+    --accent:#A93226; --accent-ink:#7E251C; --accent-soft:#F6E4E0; --gold:#B0863B;
+    --ok:#3E7C5A; --warn:#B8791C; --under:#C0392B; --rest:#F3C623; --rest-ink:#6b5310; --li:#D64545;
+    --shadow:0 1px 2px rgba(60,40,20,.06),0 10px 28px rgba(60,40,20,.07);
+  }
+  :root[data-theme="dark"]{
+    --paper:#171310; --surface:#211B16; --surface-2:#2A231C; --surface-3:#342B22;
+    --ink:#F2EAE0; --ink-soft:#C3B6A8; --muted:#8E8073; --line:#352C24; --line-strong:#4A3D31;
+    --accent:#E07566; --accent-ink:#EF9384; --accent-soft:#3A241F; --gold:#CDA35C;
+    --ok:#6FBF8F; --warn:#E0AE55; --under:#E8756A; --rest:#C8A32B; --rest-ink:#231c08; --li:#E06262;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font);-webkit-font-smoothing:antialiased;line-height:1.45;}
+  .wrap{max-width:1400px;margin:0 auto;padding:20px 16px 60px;}
+
+  header.top{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;padding-bottom:14px;
+    border-bottom:2px solid var(--line-strong);margin-bottom:14px;}
+  .brand{display:flex;flex-direction:column;gap:2px;min-width:0;}
+  .brand .co{font-size:12px;letter-spacing:.16em;color:var(--gold);font-weight:700;}
+  .brand h1{margin:0;font-size:22px;letter-spacing:.05em;font-weight:800;}
+  .brand h1 b{color:var(--accent);}
+  .mnav{margin-left:auto;display:flex;align-items:center;gap:6px;background:var(--surface);
+    border:1px solid var(--line);border-radius:999px;padding:5px 6px;box-shadow:var(--shadow);}
+  .mnav button{border:none;background:transparent;color:var(--ink);cursor:pointer;width:32px;height:32px;border-radius:999px;font-size:17px;}
+  .mnav button:hover{background:var(--surface-2);}
+  .mnav .lbl{font-variant-numeric:tabular-nums;font-weight:800;padding:0 8px;min-width:132px;text-align:center;font-size:15px;}
+  .mnav .lbl span{display:block;font-size:10.5px;font-weight:600;color:var(--muted);letter-spacing:.05em;}
+  .mnav .today{font-size:12px;font-weight:700;color:var(--accent);padding:0 8px;}
+
+  /* brush toolbar */
+  .brushbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--surface);
+    border:1px solid var(--line);border-radius:12px;padding:9px 11px;box-shadow:var(--shadow);margin-bottom:12px;}
+  .brushbar .grp{display:flex;gap:5px;align-items:center;}
+  .brushbar .sep{width:1px;align-self:stretch;background:var(--line);margin:2px 4px;}
+  .brushbar .tip{font-size:12px;color:var(--muted);margin-right:2px;font-weight:700;}
+  .brush{font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;border:1.5px solid var(--line-strong);
+    background:var(--surface);color:var(--ink);border-radius:8px;padding:6px 11px;min-width:34px;line-height:1.1;
+    transition:transform .05s,box-shadow .1s;position:relative;}
+  .brush small{display:block;font-size:9px;font-weight:600;color:var(--muted);letter-spacing:.02em;margin-top:1px;}
+  .brush:hover{filter:brightness(.97);}
+  .brush:active{transform:translateY(1px);}
+  .brush.on{box-shadow:0 0 0 2px var(--paper),0 0 0 4px var(--ink);}
+  .brush.erase{border-style:dashed;color:var(--ink-soft);}
+
+  .tools{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+  .btn{font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;border:1px solid var(--line-strong);
+    background:var(--surface);color:var(--ink);padding:8px 13px;border-radius:9px;display:inline-flex;align-items:center;gap:6px;}
+  .btn:hover{background:var(--surface-2);}
+  .btn:active{transform:translateY(1px);}
+  .btn.ghost{border-style:dashed;color:var(--ink-soft);}
+  .spacer{flex:1 1 auto;}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+  .scroll{overflow:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);
+    box-shadow:var(--shadow);max-height:70vh;}
+  table.roster{border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums;}
+  table.roster th,table.roster td{border-right:1px solid var(--line);border-bottom:1px solid var(--line);
+    padding:0;text-align:center;white-space:nowrap;}
+  /* header */
+  thead th{position:sticky;top:0;z-index:5;background:var(--surface-2);font-weight:700;}
+  thead tr.days th{font-size:12px;height:24px;min-width:30px;width:30px;color:var(--ink-soft);}
+  thead tr.dow th{font-size:11px;height:20px;color:var(--muted);}
+  th.we,td.we{background:var(--accent-soft);}
+  th.we{color:var(--accent) !important;}
+  th.todaycol,td.todaycol{box-shadow:inset 0 0 0 2px var(--gold);}
+  .cor{position:sticky;z-index:7;background:var(--surface-3);}
+  th.cor-dept{left:0;width:34px;min-width:34px;}
+  th.cor-name{left:34px;width:66px;min-width:66px;}
+  thead th.cor{top:0;z-index:9;}
+  /* group label vertical */
+  td.deptlabel{position:sticky;left:0;z-index:6;background:var(--surface-3);font-weight:800;font-size:14px;
+    color:var(--accent);width:34px;min-width:34px;writing-mode:vertical-rl;text-orientation:upright;letter-spacing:.15em;}
+  td.nm{position:sticky;left:34px;z-index:6;background:var(--surface);font-weight:700;font-size:13px;
+    width:66px;min-width:66px;padding:0 6px;text-align:left;}
+  tr.noterow td.nm{color:var(--ink-soft);font-weight:600;font-size:12px;}
+  /* body cells */
+  td.c{cursor:pointer;height:30px;min-width:30px;width:30px;font-size:12.5px;font-weight:800;color:#fff;
+    transition:filter .08s;}
+  td.c:hover{filter:brightness(1.08);outline:2px solid var(--ink);outline-offset:-2px;}
+  td.c.empty{color:transparent;background:transparent;}
+  tr.noterow td.c{font-weight:700;}
+  /* summary rows */
+  tr.sum td{background:var(--surface-2);font-weight:800;font-size:12px;height:24px;}
+  tr.sum td.rowlabel{position:sticky;left:0;z-index:6;background:var(--surface-3);color:var(--ink-soft);
+    text-align:right;padding-right:8px;font-size:11.5px;letter-spacing:.04em;width:100px;min-width:100px;}
+  tr.sum td.n0{color:var(--muted);}
+  tr.sum td.low{color:var(--under);}
+  tr.groupgap td{height:7px;background:var(--paper);border:none;}
+
+  /* panels */
+  .cols{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;margin-top:16px;}
+  @media(max-width:900px){.cols{grid-template-columns:1fr;}}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+  .card h2{margin:0;padding:12px 15px;font-size:14px;font-weight:800;letter-spacing:.04em;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;}
+  .card h2 .tick{width:4px;height:15px;border-radius:2px;background:var(--accent);}
+  .card h2 .r{margin-left:auto;font-size:11px;font-weight:600;color:var(--muted);}
+  table.stat{width:100%;border-collapse:collapse;}
+  table.stat th,table.stat td{padding:8px 12px;font-size:13px;border-bottom:1px solid var(--line);text-align:right;}
+  table.stat th{font-size:11px;color:var(--muted);font-weight:700;background:var(--surface-2);}
+  table.stat td.name,table.stat th.name{text-align:left;font-weight:700;}
+  table.stat td.hrs{font-weight:800;color:var(--accent);}
+  table.stat tr.deptsep td{background:var(--surface-2);font-weight:800;color:var(--ink-soft);text-align:left;font-size:11px;letter-spacing:.05em;}
+  table.stat tr:last-child td{border-bottom:none;}
+  .legend{padding:12px 15px;display:flex;flex-direction:column;gap:14px;}
+  .legend .dept{font-size:12px;font-weight:800;color:var(--accent);margin-bottom:6px;letter-spacing:.05em;}
+  .legend .rows{display:flex;flex-direction:column;gap:5px;}
+  .lgrow{display:flex;align-items:center;gap:9px;font-size:12.5px;}
+  .lgtag{width:34px;text-align:center;font-weight:800;color:#fff;border-radius:6px;padding:3px 0;flex:none;font-size:12px;}
+  .lgtime{color:var(--ink-soft);font-variant-numeric:tabular-nums;}
+  .lghr{margin-left:auto;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums;}
+
+  /* modal */
+  .scrim{position:fixed;inset:0;background:rgba(30,20,12,.5);display:none;align-items:center;justify-content:center;padding:16px;z-index:50;}
+  .scrim.open{display:flex;}
+  .modal{background:var(--surface);color:var(--ink);border-radius:16px;box-shadow:var(--shadow);width:100%;max-width:560px;max-height:88vh;overflow:auto;border:1px solid var(--line);}
+  .mhead{padding:15px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:1;}
+  .mhead h3{margin:0;font-size:16px;font-weight:800;}
+  .mhead .sub{font-size:12px;color:var(--muted);margin-top:2px;}
+  .x{border:none;background:transparent;font-size:22px;color:var(--ink-soft);cursor:pointer;line-height:1;padding:2px 6px;}
+  .mbody{padding:14px 18px;}
+  .deptblock{margin-bottom:18px;}
+  .deptblock>.dh{font-size:13px;font-weight:800;color:var(--accent);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+  .row-edit{display:flex;gap:7px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+  .row-edit:last-child{border-bottom:none;}
+  .row-edit input,.row-edit select{font-family:inherit;font-size:13px;padding:6px 8px;border:1px solid var(--line-strong);border-radius:7px;background:var(--paper);color:var(--ink);}
+  .row-edit input.name{flex:1;min-width:70px;font-weight:700;}
+  .row-edit input.lbl{width:56px;text-align:center;font-weight:800;}
+  .row-edit input.tm{width:150px;font-variant-numeric:tabular-nums;}
+  .row-edit input.hr{width:56px;text-align:center;}
+  .row-edit input.cdot{width:26px;height:26px;padding:0;border-radius:6px;cursor:pointer;flex:none;}
+  .row-edit label.ck{display:flex;align-items:center;gap:3px;font-size:12px;color:var(--ink-soft);cursor:pointer;}
+  .row-edit .del{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 5px;}
+  .row-edit .del:hover{color:var(--accent);}
+  .fld{font-size:11px;color:var(--muted);}
+  .addline{margin-top:10px;}
+  .hint{font-size:12px;color:var(--muted);margin:0 0 12px;line-height:1.5;}
+  .mfoot{padding:13px 18px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:8px;position:sticky;bottom:0;background:var(--surface);}
+  .titlefld{width:100%;font-family:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line-strong);border-radius:8px;background:var(--paper);color:var(--ink);margin-bottom:14px;font-weight:700;}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(18px);background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:700;opacity:0;pointer-events:none;transition:.2s;z-index:80;box-shadow:var(--shadow);}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .foot{margin-top:20px;text-align:center;color:var(--muted);font-size:12px;}
+
+  /* read-only view banner + share modal */
+  .banner{display:none;align-items:center;gap:12px;background:var(--accent-soft);border:1px solid var(--accent);
+    border-radius:12px;padding:11px 15px;margin-bottom:14px;font-size:13.5px;font-weight:700;color:var(--accent-ink);}
+  body.ro .banner{display:flex;}
+  .banner .em{font-size:18px;}
+  .banner .mk{margin-left:auto;font-size:12px;font-weight:700;color:var(--accent);text-decoration:none;
+    border:1px solid var(--accent);border-radius:8px;padding:6px 11px;white-space:nowrap;}
+  .banner .mk:hover{background:var(--accent);color:#fff;}
+  .sharebox{display:flex;flex-direction:column;gap:12px;}
+  .sharebox textarea{width:100%;height:84px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;
+    padding:9px;border:1px solid var(--line-strong);border-radius:9px;background:var(--paper);color:var(--ink-soft);resize:vertical;}
+  .sharebox .acts{display:flex;gap:8px;flex-wrap:wrap;}
+  .sharebox .big{flex:1;justify-content:center;font-size:14px;padding:11px;}
+  .sharebox .line{background:#06C755;border-color:#06C755;color:#fff;}
+  .sharebox .line:hover{background:#05a648;}
+
+  @media print{
+    @page{size:A4 landscape;margin:8mm;}
+    body{background:#fff;color:#000;}
+    .brushbar,.tools,.mnav,.scrim,.foot,.cols .legend{display:none !important;}
+    .scroll{max-height:none;overflow:visible;box-shadow:none;border-color:#000;}
+    table.roster th,table.roster td{border-color:#999 !important;}
+    td.c{color:#000 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    thead th,.cor,td.deptlabel,td.nm,tr.sum td{position:static !important;}
+    .cols{grid-template-columns:1fr;} .card{box-shadow:none;break-inside:avoid;}
+  }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="co" id="coName">鼎京餐飲有限公司</div>
+      <h1><b>【潮牛殿】</b>排班表</h1>
+    </div>
+    <div class="mnav">
+      <button id="prevM" title="上個月">‹</button>
+      <div class="lbl" id="mLbl">—<span id="mSub"></span></div>
+      <button id="nextM" title="下個月">›</button>
+      <button class="today" id="thisM" title="本月">今</button>
+    </div>
+  </header>
+
+  <div class="banner" id="banner">
+    <span class="em">📅</span>
+    <span id="bannerTxt">檢視模式（唯讀）</span>
+    <a class="mk" id="ownCopy" href="#">我要自己排一份 →</a>
+  </div>
+
+  <div class="brushbar" id="brushbar">
+    <span class="tip">選代號 → 點格子填入：</span>
+    <div class="grp" id="brushCodes"></div>
+    <div class="sep"></div>
+    <div class="grp" id="brushRest"></div>
+    <div class="sep"></div>
+    <button class="brush erase" data-brush="" id="brushErase">清除</button>
+  </div>
+
+  <div class="tools">
+    <button class="btn" id="btnStaff">👤 員工設定</button>
+    <button class="btn" id="btnCode">🕑 班別代號</button>
+    <button class="btn ghost" id="btnClearM">↺ 清空本月</button>
+    <span class="spacer"></span>
+    <button class="btn" id="btnShare" style="background:var(--accent);color:#fff;border-color:var(--accent)">🔗 分享本月班表</button>
+    <button class="btn" id="btnCsv">⬇ 下載 CSV</button>
+    <button class="btn" id="btnHours">⬇ 工時統計 CSV</button>
+    <button class="btn" id="btnPrint">🖨 列印</button>
+  </div>
+
+  <div class="scroll"><table class="roster" id="roster"></table></div>
+
+  <div class="cols">
+    <div class="card">
+      <h2><span class="tick"></span>本月工時統計<span class="r">工作時數／上班天數／休 · 例 · 年</span></h2>
+      <div id="hoursPanel"></div>
+    </div>
+    <div class="card">
+      <h2><span class="tick"></span>班別代號說明</h2>
+      <div class="legend" id="legendPanel"></div>
+    </div>
+  </div>
+
+  <div class="foot">資料自動儲存在此裝置的瀏覽器 · 潮牛殿殿長專用 · 民國年＝西元−1911</div>
+</div>
+
+<!-- 員工設定 -->
+<div class="scrim" id="staffScrim"><div class="modal">
+  <div class="mhead"><div><h3>員工設定</h3><div class="sub">依外場／內場分組，可新增、改名、刪除</div></div><button class="x" data-close>×</button></div>
+  <div class="mbody"><div id="staffEdit"></div></div>
+  <div class="mfoot"><span></span><button class="btn" style="background:var(--accent);color:#fff;border-color:var(--accent)" data-close>完成</button></div>
+</div></div>
+
+<!-- 班別代號設定 -->
+<div class="scrim" id="codeScrim"><div class="modal">
+  <div class="mhead"><div><h3>班別代號設定</h3><div class="sub">名稱、時段、工時，及是否計入早／晚班人數</div></div><button class="x" data-close>×</button></div>
+  <div class="mbody">
+    <input class="titlefld" id="coEdit" placeholder="公司抬頭">
+    <p class="hint">外場、內場代號可各自不同。「算早／算晚」用於底部人數統計；「休假類」不計工時與人數。</p>
+    <div id="codeEdit"></div>
+  </div>
+  <div class="mfoot"><span></span><button class="btn" style="background:var(--accent);color:#fff;border-color:var(--accent)" data-close>完成</button></div>
+</div></div>
+
+<!-- 分享 -->
+<div class="scrim" id="shareScrim"><div class="modal">
+  <div class="mhead"><div><h3>分享本月班表</h3><div class="sub" id="shareSub">產生唯讀連結，店員點開即可查看</div></div><button class="x" data-close>×</button></div>
+  <div class="mbody"><div class="sharebox">
+    <p class="hint" style="margin:0">連結內含本月排班內容，店員打開會看到你排好的班（唯讀，不能改）。班表改動後要重新分享新連結。</p>
+    <textarea id="shareUrl" readonly></textarea>
+    <div class="acts">
+      <button class="btn big line" id="shareLine">💬 開啟 LINE 分享</button>
+      <button class="btn big" id="shareCopy">📋 複製連結</button>
+    </div>
+  </div></div>
+  <div class="mfoot"><span></span><button class="btn" data-close>關閉</button></div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+  var DOW=["日","一","二","三","四","五","六"];
+  var KEY="chaoniudian_roster_v3";
+  var state=load();
+  var view=(function(){var d=new Date();return {y:d.getFullYear(),m:d.getMonth()+1};})();
+  var brush="Ａ";
+  var readonly=false;
+
+  function uid(){return "x"+(seq++)+Math.floor(Math.random()*1e6).toString(36);} var seq=0;
+
+  function load(){
+    try{var s=JSON.parse(localStorage.getItem(KEY)); if(s&&s.depts) return s;}catch(e){}
+    return defaults();
+  }
+  function defaults(){
+    var mk=function(label,tm,hr,mo,ev,color){return {id:uid(),label:label,time:tm,hours:hr,morning:mo,evening:ev,color:color};};
+    return {
+      company:"鼎京餐飲有限公司",
+      rest:[
+        {id:uid(),label:"休",color:"var(--rest)",ink:1},
+        {id:uid(),label:"例",color:"var(--li)",ink:0},
+        {id:uid(),label:"年",color:"var(--rest)",ink:1},
+        {id:uid(),label:"W",color:"#6B7A85",ink:0}
+      ],
+      extraCodes:[{id:uid(),label:"O",color:"#5A7184",ink:0},{id:uid(),label:"N",color:"#8A6D3B",ink:0}],
+      depts:[
+        {id:"out",name:"外場",
+         codes:[ mk("Ａ","1100-1430 1630-2200",9,1,1,"#2E7D6B"),
+                 mk("Ａ上","1030-1430",4,1,0,"#3B6EA5"),
+                 mk("Ａ下","1700-2100",4,0,1,"#8E5AA6"),
+                 mk("B","1130-1430 1630-2230",9,1,1,"#C2703D") ],
+         staff:[{id:uid(),name:"孟竹"},{id:uid(),name:"元劭"},{id:uid(),name:"彥伶"},{id:uid(),name:"馬克"},{id:uid(),name:"W"}],
+         extras:[{id:uid(),name:"中午包廂"},{id:uid(),name:"晚上包廂"}],
+         sums:[{label:"外早正",kind:"morning"},{label:"外晚正",kind:"evening"}]},
+        {id:"in",name:"內場",
+         codes:[ mk("Ａ","1000-1430 1630-2030",8.5,1,1,"#2E7D6B"),
+                 mk("Ａ下","1430-2230",8,0,1,"#8E5AA6"),
+                 mk("B","1030-1430 1630-2130",9,1,1,"#C2703D"),
+                 mk("C","1030-1430 1630-2200",9.5,1,1,"#4B7A3F") ],
+         staff:[{id:uid(),name:"小胖"},{id:uid(),name:"益志"},{id:uid(),name:"垂玲"},{id:uid(),name:"馬克"},{id:uid(),name:"康"}],
+         extras:[],
+         sums:[{label:"內早正",kind:"morning"},{label:"內晚正",kind:"evening"}]}
+      ],
+      months:{}
+    };
+  }
+  function save(){if(readonly)return;try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+
+  /* ---- month data ---- */
+  function mkey(){return view.y+"-"+pad(view.m);}
+  function monthObj(){var k=mkey(); if(!state.months[k]) state.months[k]={}; return state.months[k];}
+  function pad(n){return (n<10?"0":"")+n;}
+  function daysInMonth(){return new Date(view.y,view.m,0).getDate();}
+  function get(rowId,day){return monthObj()[rowId+"_"+day]||"";}
+  function set(rowId,day,val){var o=monthObj(); var k=rowId+"_"+day; if(val)o[k]=val; else delete o[k]; save();}
+
+  function codeByLabel(dept,label){
+    if(!label)return null;
+    for(var i=0;i<dept.codes.length;i++) if(dept.codes[i].label===label) return dept.codes[i];
+    return null;
+  }
+  function anyCodeMeta(label){
+    // for coloring rest/extra/any label
+    for(var i=0;i<state.rest.length;i++) if(state.rest[i].label===label) return {color:state.rest[i].color,ink:state.rest[i].ink,rest:true};
+    for(var j=0;j<state.extraCodes.length;j++) if(state.extraCodes[j].label===label) return {color:state.extraCodes[j].color,ink:state.extraCodes[j].ink};
+    return null;
+  }
+  function cellStyle(dept,label){
+    if(!label) return {bg:"",fg:""};
+    var c=codeByLabel(dept,label);
+    if(c) return {bg:c.color,fg:"#fff"};
+    var m=anyCodeMeta(label);
+    if(m) return {bg:m.color,fg:m.ink?"var(--rest-ink)":"#fff"};
+    return {bg:"var(--muted)",fg:"#fff"};
+  }
+
+  /* ---- render brush bar ---- */
+  function renderBrush(){
+    var cs=document.getElementById("brushCodes"); cs.innerHTML="";
+    // union of labels across depts, keep order from first dept then extras
+    var seen={},labels=[];
+    state.depts.forEach(function(d){d.codes.forEach(function(c){if(!seen[c.label]){seen[c.label]=c;labels.push(c.label);}});});
+    labels.forEach(function(l){ cs.appendChild(brushBtn(l, seen[l].color, "#fff")); });
+    var rr=document.getElementById("brushRest"); rr.innerHTML="";
+    state.rest.forEach(function(c){ rr.appendChild(brushBtn(c.label,c.color,c.ink?"var(--rest-ink)":"#fff")); });
+    state.extraCodes.forEach(function(c){ rr.appendChild(brushBtn(c.label,c.color,c.ink?"var(--rest-ink)":"#fff")); });
+    highlightBrush();
+  }
+  function brushBtn(label,bg,fg){
+    var b=document.createElement("button"); b.className="brush"; b.dataset.brush=label;
+    b.style.background=bg; b.style.color=fg; b.style.borderColor="transparent";
+    b.textContent=label;
+    b.addEventListener("click",function(){brush=label;highlightBrush();});
+    return b;
+  }
+  function highlightBrush(){
+    document.querySelectorAll(".brush").forEach(function(b){ b.classList.toggle("on", b.dataset.brush===brush); });
+  }
+
+  /* ---- render roster ---- */
+  var roster=document.getElementById("roster");
+  function renderRoster(){
+    var N=daysInMonth();
+    var today=new Date(); var isThis=(today.getFullYear()===view.y&&today.getMonth()+1===view.m); var td_=today.getDate();
+    var h="<thead>";
+    // day numbers
+    h+="<tr class='days'><th class='cor cor-dept'></th><th class='cor cor-name'>日期</th>";
+    for(var d=1;d<=N;d++){var wd=new Date(view.y,view.m-1,d).getDay(); var we=(wd===0||wd===6);
+      h+="<th class='"+(we?"we ":"")+(isThis&&d===td_?"todaycol":"")+"'>"+d+"</th>";}
+    h+="</tr>";
+    // weekday
+    h+="<tr class='dow'><th class='cor cor-dept'></th><th class='cor cor-name'>星期</th>";
+    for(var d2=1;d2<=N;d2++){var wd2=new Date(view.y,view.m-1,d2).getDay(); var we2=(wd2===0||wd2===6);
+      h+="<th class='"+(we2?"we ":"")+(isThis&&d2===td_?"todaycol":"")+"'>"+DOW[wd2]+"</th>";}
+    h+="</tr></thead><tbody>";
+
+    state.depts.forEach(function(dept,di){
+      if(di>0) h+="<tr class='groupgap'><td colspan='"+(N+2)+"'></td></tr>";
+      var rows=dept.staff.concat(dept.extras.map(function(e){return {id:e.id,name:e.name,note:true};}));
+      rows.forEach(function(p,ri){
+        h+="<tr class='"+(p.note?"noterow":"")+"'>";
+        if(ri===0) h+="<td class='deptlabel' rowspan='"+rows.length+"'>"+esc(dept.name)+"</td>";
+        h+="<td class='nm'>"+esc(p.name)+"</td>";
+        for(var d3=1;d3<=N;d3++){
+          var wd3=new Date(view.y,view.m-1,d3).getDay(); var we3=(wd3===0||wd3===6);
+          var val=get(p.id,d3); var st=cellStyle(dept,val);
+          var cls="c"+(val?"":" empty")+(we3&&!val?" we":"")+(isThis&&d3===td_?" todaycol":"");
+          var sty=val?("background:"+st.bg+";color:"+st.fg):"";
+          h+="<td class='"+cls+"' data-row='"+p.id+"' data-dept='"+dept.id+"' data-day='"+d3+"' style='"+sty+"'>"+esc(val)+"</td>";
+        }
+        h+="</tr>";
+      });
+      // summary rows
+      dept.sums.forEach(function(sm){
+        h+="<tr class='sum'><td class='rowlabel' colspan='2'>"+esc(sm.label)+"</td>";
+        for(var d4=1;d4<=N;d4++){
+          var cnt=countSum(dept,sm.kind,d4);
+          h+="<td class='"+(cnt===0?"n0":"")+"'>"+(cnt||"")+"</td>";
+        }
+        h+="</tr>";
+      });
+    });
+    h+="</tbody>";
+    roster.innerHTML=h;
+
+    document.getElementById("mLbl").firstChild.nodeValue=view.y+" / "+pad(view.m);
+    document.getElementById("mSub").textContent="民國 "+(view.y-1911)+" 年 "+view.m+" 月";
+    document.getElementById("coName").textContent=state.company;
+  }
+  function countSum(dept,kind,day){
+    var n=0;
+    dept.staff.forEach(function(p){
+      var c=codeByLabel(dept,get(p.id,day));
+      if(c && c[kind]) n++;
+    });
+    return n;
+  }
+
+  roster.addEventListener("click",function(e){
+    if(readonly)return;
+    var td=e.target.closest("td.c"); if(!td)return;
+    var dept=deptById(td.dataset.dept);
+    set(td.dataset.row, +td.dataset.day, brush);
+    // update just this cell + affected summaries + hours
+    var st=cellStyle(dept,brush);
+    td.textContent=brush; td.className="c"+(brush?"":" empty");
+    td.style.background=brush?st.bg:""; td.style.color=brush?st.fg:"";
+    refreshSums(); renderHours();
+  });
+  // right-click to erase quickly
+  roster.addEventListener("contextmenu",function(e){
+    if(readonly)return;
+    var td=e.target.closest("td.c"); if(!td)return; e.preventDefault();
+    set(td.dataset.row,+td.dataset.day,"");
+    td.textContent=""; td.className="c empty"; td.style.background=""; td.style.color="";
+    refreshSums(); renderHours();
+  });
+  function refreshSums(){
+    // re-render just summary rows cheaply by full roster re-render of tbody sums — simplest: recompute all sum cells
+    var N=daysInMonth();
+    document.querySelectorAll("tr.sum").forEach(function(tr){});
+    // easiest correct approach: full re-render (fast enough)
+    renderRoster();
+  }
+
+  function deptById(id){for(var i=0;i<state.depts.length;i++)if(state.depts[i].id===id)return state.depts[i];return null;}
+
+  /* ---- hours panel ---- */
+  function renderHours(){
+    var N=daysInMonth();
+    var html="<table class='stat'><thead><tr><th class='name'>員工</th><th>工作時數</th><th>上班天數</th><th>休</th><th>例</th><th>年</th></tr></thead><tbody>";
+    state.depts.forEach(function(dept){
+      html+="<tr class='deptsep'><td colspan='6'>"+esc(dept.name)+"</td></tr>";
+      dept.staff.forEach(function(p){
+        var hrs=0,days=0,r={};
+        for(var d=1;d<=N;d++){
+          var v=get(p.id,d); if(!v)continue;
+          var c=codeByLabel(dept,v);
+          if(c){hrs+=c.hours;days++;}
+          else{r[v]=(r[v]||0)+1;}
+        }
+        html+="<tr><td class='name'>"+esc(p.name)+"</td><td class='hrs'>"+(Math.round(hrs*10)/10)+"</td><td>"+(days||"")+"</td>"
+          +"<td>"+(r["休"]||"")+"</td><td>"+(r["例"]||"")+"</td><td>"+(r["年"]||"")+"</td></tr>";
+      });
+    });
+    html+="</tbody></table>";
+    document.getElementById("hoursPanel").innerHTML=html;
+  }
+
+  /* ---- legend ---- */
+  function renderLegend(){
+    var el=document.getElementById("legendPanel"); el.innerHTML="";
+    state.depts.forEach(function(dept){
+      var box=document.createElement("div"); box.className="dept-legend";
+      var h="<div class='dept'>"+esc(dept.name)+"</div><div class='rows'>";
+      dept.codes.forEach(function(c){
+        h+="<div class='lgrow'><span class='lgtag' style='background:"+c.color+"'>"+esc(c.label)+"</span>"
+          +"<span class='lgtime'>"+esc(c.time)+"</span><span class='lghr'>"+c.hours+" hr</span></div>";
+      });
+      h+="</div>"; box.innerHTML=h; el.appendChild(box);
+    });
+    var rbox=document.createElement("div");
+    var rh="<div class='dept'>假別 / 其他</div><div class='rows'>";
+    state.rest.concat(state.extraCodes).forEach(function(c){
+      rh+="<div class='lgrow'><span class='lgtag' style='background:"+c.color+";color:"+(c.ink?"var(--rest-ink)":"#fff")+"'>"+esc(c.label)+"</span>"
+        +"<span class='lgtime'>"+(c.label==="休"?"休假":c.label==="例"?"例假":c.label==="年"?"年假":c.label==="W"?"待排/工讀":c.label==="O"?"包廂(午)":c.label==="N"?"包廂(晚)":"")+"</span></div>";
+    });
+    rh+="</div>"; rbox.innerHTML=rh; el.appendChild(rbox);
+  }
+
+  /* ---- staff editor ---- */
+  function renderStaffEdit(){
+    var el=document.getElementById("staffEdit"); el.innerHTML="";
+    state.depts.forEach(function(dept){
+      var block=document.createElement("div"); block.className="deptblock";
+      block.innerHTML="<div class='dh'>"+esc(dept.name)+" · 員工</div>";
+      dept.staff.forEach(function(p,i){
+        block.appendChild(nameRow(p,function(){dept.staff.splice(i,1);save();renderStaffEdit();renderAll();}));
+      });
+      var add=document.createElement("button"); add.className="btn"; add.style.marginTop="8px"; add.textContent="＋ 新增員工";
+      add.addEventListener("click",function(){dept.staff.push({id:uid(),name:"新員工"});save();renderStaffEdit();renderAll();});
+      block.appendChild(add);
+      // note rows (包廂)
+      if(dept.extras.length || dept.id==="out"){
+        var nh=document.createElement("div"); nh.className="dh"; nh.style.marginTop="14px"; nh.textContent="附加列（如包廂）"; block.appendChild(nh);
+        dept.extras.forEach(function(p,i){
+          block.appendChild(nameRow(p,function(){dept.extras.splice(i,1);save();renderStaffEdit();renderAll();}));
+        });
+        var add2=document.createElement("button"); add2.className="btn"; add2.style.marginTop="8px"; add2.textContent="＋ 新增附加列";
+        add2.addEventListener("click",function(){dept.extras.push({id:uid(),name:"新列"});save();renderStaffEdit();renderAll();});
+        block.appendChild(add2);
+      }
+      el.appendChild(block);
+    });
+  }
+  function nameRow(p,onDel){
+    var row=document.createElement("div"); row.className="row-edit";
+    var inp=document.createElement("input"); inp.className="name"; inp.value=p.name;
+    inp.addEventListener("input",function(){p.name=inp.value;save();renderRoster();renderHours();});
+    var del=document.createElement("button"); del.className="del"; del.textContent="🗑";
+    del.addEventListener("click",onDel);
+    row.appendChild(inp); row.appendChild(del); return row;
+  }
+
+  /* ---- code editor ---- */
+  function renderCodeEdit(){
+    document.getElementById("coEdit").value=state.company;
+    var el=document.getElementById("codeEdit"); el.innerHTML="";
+    state.depts.forEach(function(dept){
+      var block=document.createElement("div"); block.className="deptblock";
+      block.innerHTML="<div class='dh'>"+esc(dept.name)+" · 班別</div>";
+      dept.codes.forEach(function(c,i){ block.appendChild(codeRow(dept,c,i)); });
+      var add=document.createElement("button"); add.className="btn"; add.style.marginTop="8px"; add.textContent="＋ 新增班別";
+      add.addEventListener("click",function(){dept.codes.push({id:uid(),label:"新",time:"",hours:8,morning:1,evening:1,color:"#2E7D6B"});save();renderCodeEdit();renderAll();});
+      block.appendChild(add);
+      el.appendChild(block);
+    });
+  }
+  function codeRow(dept,c,i){
+    var row=document.createElement("div"); row.className="row-edit";
+    var color=document.createElement("input"); color.type="color"; color.className="cdot"; color.value=hex(c.color);
+    color.addEventListener("input",function(){c.color=color.value;save();renderAll();});
+    var lbl=document.createElement("input"); lbl.className="lbl"; lbl.value=c.label;
+    lbl.addEventListener("input",function(){c.label=lbl.value;save();renderAll();});
+    var tm=document.createElement("input"); tm.className="tm"; tm.value=c.time; tm.placeholder="1100-1430 1630-2200";
+    tm.addEventListener("input",function(){c.time=tm.value;save();renderLegend();});
+    var hr=document.createElement("input"); hr.className="hr"; hr.type="number"; hr.step="0.5"; hr.value=c.hours;
+    hr.addEventListener("input",function(){c.hours=+hr.value||0;save();renderLegend();renderHours();});
+    var l1=ck("早",c.morning,function(v){c.morning=v;save();renderRoster();});
+    var l2=ck("晚",c.evening,function(v){c.evening=v;save();renderRoster();});
+    var del=document.createElement("button"); del.className="del"; del.textContent="🗑";
+    del.addEventListener("click",function(){dept.codes.splice(i,1);save();renderCodeEdit();renderAll();});
+    row.appendChild(color); row.appendChild(lbl); row.appendChild(tm);
+    row.appendChild(hr); var u=document.createElement("span"); u.className="fld"; u.textContent="hr"; row.appendChild(u);
+    row.appendChild(l1); row.appendChild(l2); row.appendChild(del);
+    return row;
+  }
+  function ck(label,val,on){
+    var l=document.createElement("label"); l.className="ck";
+    var i=document.createElement("input"); i.type="checkbox"; i.checked=!!val;
+    i.addEventListener("change",function(){on(i.checked?1:0);});
+    l.appendChild(i); l.appendChild(document.createTextNode(label)); return l;
+  }
+  function hex(c){ if(c&&c[0]==="#")return c; var map={"var(--rest)":"#F3C623","var(--li)":"#D64545"}; return map[c]||"#888888"; }
+
+  /* ---- exports ---- */
+  function exportCsv(){
+    var N=daysInMonth();
+    var rows=[]; var top=[state.company+" 潮牛殿排班表  民國"+(view.y-1911)+"年"+view.m+"月"];
+    rows.push(top);
+    var head=["組別","姓名"]; for(var d=1;d<=N;d++)head.push(d+"("+DOW[new Date(view.y,view.m-1,d).getDay()]+")"); rows.push(head);
+    state.depts.forEach(function(dept){
+      dept.staff.concat(dept.extras).forEach(function(p){
+        var r=[dept.name,p.name]; for(var d=1;d<=N;d++)r.push(get(p.id,d)); rows.push(r);
+      });
+      dept.sums.forEach(function(sm){
+        var r=["",sm.label]; for(var d=1;d<=N;d++){var c=countSum(dept,sm.kind,d);r.push(c||"");} rows.push(r);
+      });
+    });
+    downloadCsv(rows,"潮牛殿排班_"+mkey()+".csv");
+  }
+  function exportHours(){
+    var N=daysInMonth();
+    var rows=[["潮牛殿 本月工時統計  民國"+(view.y-1911)+"年"+view.m+"月"],["組別","姓名","工作時數","上班天數","休","例","年"]];
+    state.depts.forEach(function(dept){
+      dept.staff.forEach(function(p){
+        var hrs=0,days=0,r={};
+        for(var d=1;d<=N;d++){var v=get(p.id,d);if(!v)continue;var c=codeByLabel(dept,v);if(c){hrs+=c.hours;days++;}else r[v]=(r[v]||0)+1;}
+        rows.push([dept.name,p.name,Math.round(hrs*10)/10,days,r["休"]||0,r["例"]||0,r["年"]||0]);
+      });
+    });
+    downloadCsv(rows,"潮牛殿工時_"+mkey()+".csv");
+  }
+  function downloadCsv(rows,fname){
+    var csv="﻿"+rows.map(function(r){return r.map(function(c){return '"'+String(c==null?"":c).replace(/"/g,'""')+'"';}).join(",");}).join("\n");
+    var a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8;"}));
+    a.download=fname; a.click(); setTimeout(function(){URL.revokeObjectURL(a.href);},800);
+    toast("已下載 "+fname);
+  }
+
+  /* ---- modal helpers ---- */
+  function open(id){document.getElementById(id).classList.add("open");}
+  document.querySelectorAll(".scrim").forEach(function(sc){
+    sc.addEventListener("click",function(e){if(e.target===sc||e.target.hasAttribute("data-close"))sc.classList.remove("open");});
+  });
+  document.addEventListener("keydown",function(e){if(e.key==="Escape")document.querySelectorAll(".scrim.open").forEach(function(s){s.classList.remove("open");});});
+  var toastT; function toast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove("show");},2200);}
+  function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+
+  /* ---- wire ---- */
+  function shiftMonth(n){var m=view.m+n,y=view.y;while(m>12){m-=12;y++;}while(m<1){m+=12;y--;}view.y=y;view.m=m;renderAll();}
+  document.getElementById("prevM").addEventListener("click",function(){shiftMonth(-1);});
+  document.getElementById("nextM").addEventListener("click",function(){shiftMonth(1);});
+  document.getElementById("thisM").addEventListener("click",function(){var d=new Date();view.y=d.getFullYear();view.m=d.getMonth()+1;renderAll();});
+  document.getElementById("btnStaff").addEventListener("click",function(){renderStaffEdit();open("staffScrim");});
+  document.getElementById("btnCode").addEventListener("click",function(){renderCodeEdit();open("codeScrim");});
+  document.getElementById("coEdit").addEventListener("input",function(){state.company=this.value;save();document.getElementById("coName").textContent=state.company;});
+  document.getElementById("btnClearM").addEventListener("click",function(){
+    if(confirm("清空本月所有排班？")){state.months[mkey()]={};save();renderAll();}
+  });
+  document.getElementById("btnCsv").addEventListener("click",exportCsv);
+  document.getElementById("btnHours").addEventListener("click",exportHours);
+  document.getElementById("btnPrint").addEventListener("click",function(){window.print();});
+  document.getElementById("brushErase").addEventListener("click",function(){brush="";highlightBrush();});
+
+  /* ---- share / read-only view ---- */
+  function buildPayload(){
+    var o={c:state.company,y:view.y,m:view.m,rest:state.rest,ex:state.extraCodes,depts:[],a:{}};
+    state.depts.forEach(function(d){
+      o.depts.push({id:d.id,n:d.name,
+        k:d.codes.map(function(c){return {l:c.label,t:c.time,h:c.hours,mo:c.morning,ev:c.evening,col:c.color};}),
+        s:d.staff, e:d.extras, sm:d.sums});
+    });
+    var mo=monthObj(); Object.keys(mo).forEach(function(k){o.a[k]=mo[k];});
+    return o;
+  }
+  function applyPayload(o){
+    state.company=o.c||state.company;
+    state.rest=o.rest||[]; state.extraCodes=o.ex||[];
+    state.depts=(o.depts||[]).map(function(d){
+      return {id:d.id,name:d.n,
+        codes:(d.k||[]).map(function(c){return {id:uid(),label:c.l,time:c.t,hours:c.h,morning:c.mo,evening:c.ev,color:c.col};}),
+        staff:d.s||[], extras:d.e||[], sums:d.sm||[]};
+    });
+    view.y=o.y; view.m=o.m;
+    state.months={}; state.months[view.y+"-"+pad(view.m)]=o.a||{};
+  }
+  function shareUrl(){
+    var json=JSON.stringify(buildPayload());
+    var b64=btoa(unescape(encodeURIComponent(json)));
+    var base=location.origin+location.pathname;
+    return base+"#v="+encodeURIComponent(b64);
+  }
+  function openShare(){
+    var url=shareUrl();
+    document.getElementById("shareUrl").value=url;
+    document.getElementById("shareSub").textContent="民國"+(view.y-1911)+"年"+view.m+"月 · 唯讀連結";
+    open("shareScrim");
+  }
+  function initView(){
+    var h=location.hash||"";
+    var i=h.indexOf("v=");
+    if(i<0) return;
+    try{
+      var b64=decodeURIComponent(h.substring(i+2));
+      var json=decodeURIComponent(escape(atob(b64)));
+      applyPayload(JSON.parse(json));
+      readonly=true;
+      document.body.classList.add("ro");
+      document.getElementById("brushbar").style.display="none";
+      document.querySelector(".tools").style.display="none";
+      document.querySelector(".mnav").style.display="none";
+      document.getElementById("bannerTxt").textContent=
+        state.company+"【潮牛殿】民國"+(view.y-1911)+"年"+view.m+"月 班表　·　檢視模式（唯讀）";
+      document.getElementById("ownCopy").setAttribute("href",location.origin+location.pathname);
+      document.title="潮牛殿 "+view.y+"/"+pad(view.m)+" 班表";
+    }catch(e){ readonly=false; }
+  }
+
+  document.getElementById("btnShare").addEventListener("click",openShare);
+  document.getElementById("shareCopy").addEventListener("click",function(){
+    var u=document.getElementById("shareUrl").value;
+    navigator.clipboard.writeText(u).then(function(){toast("已複製連結，可貼到 LINE");},function(){var t=document.getElementById("shareUrl");t.focus();t.select();toast("請長按複製");});
+  });
+  document.getElementById("shareLine").addEventListener("click",function(){
+    var u=document.getElementById("shareUrl").value;
+    var msg="🍜 潮牛殿 民國"+(view.y-1911)+"年"+view.m+"月 班表\n"+u;
+    window.open("https://line.me/R/msg/text/?"+encodeURIComponent(msg),"_blank");
+  });
+
+  function renderAll(){renderRoster();renderHours();renderLegend();}
+  initView();
+  renderBrush(); renderAll();
+})();
+</script>
