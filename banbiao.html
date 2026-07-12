@@ -284,7 +284,7 @@
     <p class="hint" style="margin:0">連結內含本月排班內容，店員打開會看到你排好的班（唯讀，不能改）。班表改動後要重新分享新連結。</p>
     <textarea id="shareUrl" readonly></textarea>
     <a class="btn big" id="shareOpen" target="_blank" rel="noopener" style="justify-content:center;background:var(--gold);border-color:var(--gold);color:#fff;text-decoration:none">🔗 開啟頁面 → 下載 Excel／列印</a>
-    <p class="hint" id="shareOpenHint" style="margin:0;display:none">💡 在這個 App 內無法下載 Excel／列印（安全限制）。要下載或列印，請按上面「開啟頁面」，到分享頁操作。</p>
+    <p class="hint" id="shareOpenHint" style="margin:0;display:none">💡 在這個 App 內無法下載 Excel／列印（安全限制）。請按上面「開啟頁面」到分享頁下載；<b>若按了沒反應</b>，改按「複製連結」，再自己貼到瀏覽器新分頁打開即可。</p>
     <div class="acts">
       <button class="btn big line" id="shareLine">💬 開啟 LINE 分享</button>
       <button class="btn big" id="shareCopy">📋 複製連結</button>
@@ -309,6 +309,7 @@
   "use strict";
   var DOW=["日","一","二","三","四","五","六"];
   var KEY="chaoniudian_roster_v8";
+  var SHARE_BASE="https://mark0857.github.io/ops-44a333ee/banbiao.html";  // 分享連結固定用正式網址
   var state=load();
   var view=(function(){var d=new Date();return {y:d.getFullYear(),m:d.getMonth()+1};})();
   var brush="Ａ";
@@ -871,8 +872,8 @@
   function shareUrl(){
     var json=JSON.stringify(buildPayload());
     var b64=btoa(unescape(encodeURIComponent(json)));
-    var base=location.origin+location.pathname;
-    return base+"#v="+encodeURIComponent(b64);
+    // 一律用正式網址當底（在 Artifact 裡 location 是臨時 iframe 網址，不能用）
+    return SHARE_BASE+"#v="+encodeURIComponent(b64);
   }
   function openShare(){
     var url=shareUrl();
