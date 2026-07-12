@@ -237,6 +237,7 @@
     <button class="btn ghost" id="btnClearM">↺ 清空本月</button>
     <span class="spacer"></span>
     <button class="btn" id="btnShare" style="background:var(--accent);color:#fff;border-color:var(--accent)">🔗 分享本月班表</button>
+    <button class="btn" id="btnXlsx">⬇ 下載 Excel</button>
     <button class="btn" id="btnCsv">⬇ 下載 CSV</button>
     <button class="btn" id="btnHours">⬇ 工時統計 CSV</button>
     <button class="btn" id="btnPrint">🖨 列印</button>
@@ -649,6 +650,128 @@
     toast("已下載 "+fname);
   }
 
+  /* ---- 匯出 xlsx（純前端，store-zip + OOXML，格式對齊原班表）---- */
+  function colLetter(n){var s="";while(n>0){var m=(n-1)%26;s=String.fromCharCode(65+m)+s;n=Math.floor((n-1)/26);}return s;}
+  function xesc(s){return String(s==null?"":s).replace(/[&<>]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c];});}
+  var _crcT=(function(){var t=[];for(var n=0;n<256;n++){var c=n;for(var k=0;k<8;k++)c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1);t[n]=c>>>0;}return t;})();
+  function crc32(b){var c=0xFFFFFFFF;for(var i=0;i<b.length;i++)c=_crcT[(c^b[i])&0xFF]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+  function zipStore(files){
+    var enc=new TextEncoder(),parts=[],central=[],offset=0;
+    files.forEach(function(f){
+      var nm=enc.encode(f.name),data=(typeof f.data==="string")?enc.encode(f.data):f.data,crc=crc32(data),sz=data.length;
+      var lh=new DataView(new ArrayBuffer(30));
+      lh.setUint32(0,0x04034b50,true);lh.setUint16(4,20,true);lh.setUint16(8,0,true);
+      lh.setUint32(14,crc,true);lh.setUint32(18,sz,true);lh.setUint32(22,sz,true);
+      lh.setUint16(26,nm.length,true);
+      parts.push(new Uint8Array(lh.buffer),nm,data);
+      var cd=new DataView(new ArrayBuffer(46));
+      cd.setUint32(0,0x02014b50,true);cd.setUint16(4,20,true);cd.setUint16(6,20,true);
+      cd.setUint32(16,crc,true);cd.setUint32(20,sz,true);cd.setUint32(24,sz,true);
+      cd.setUint16(28,nm.length,true);cd.setUint32(42,offset,true);
+      central.push(new Uint8Array(cd.buffer),nm);
+      offset+=30+nm.length+sz;
+    });
+    var cSize=0;central.forEach(function(x){cSize+=x.length;});
+    var eo=new DataView(new ArrayBuffer(22));
+    eo.setUint32(0,0x06054b50,true);eo.setUint16(8,files.length,true);eo.setUint16(10,files.length,true);
+    eo.setUint32(12,cSize,true);eo.setUint32(16,offset,true);
+    return new Blob(parts.concat(central,[new Uint8Array(eo.buffer)]),{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+  }
+  function exportXlsx(){
+    var N=daysInMonth();
+    // 顏色/樣式登記表
+    var colors=[],colorIdx={},reg={},order=[];
+    function regColor(h){if(!(h in colorIdx)){colorIdx[h]=colors.length;colors.push(h);}return colorIdx[h];}
+    function regStyle(h,ink){var k=h+"|"+ink;if(!(k in reg)){regColor(h);reg[k]=7+order.length;order.push({c:h,ink:ink});}return reg[k];}
+    state.depts.forEach(function(d){d.codes.forEach(function(c){regStyle(c.color,0);});});
+    state.rest.forEach(function(r){regStyle(hex(r.color),r.ink?1:0);});
+    state.extraCodes.forEach(function(e){regStyle(hex(e.color),e.ink?1:0);});
+    function codeStyle(dept,label){var c=codeByLabel(dept,label);if(c)return reg[c.color+"|0"];var m=anyCodeMeta(label);if(m)return reg[hex(m.color)+"|"+(m.ink?1:0)];return 4;}
+
+    var totalCols=2+N;
+    function cell(col,row,val,s,isNum){
+      var ref=colLetter(col)+row;
+      if(val===""||val==null) return "<c r=\""+ref+"\" s=\""+s+"\"/>";
+      if(isNum) return "<c r=\""+ref+"\" s=\""+s+"\"><v>"+val+"</v></c>";
+      return "<c r=\""+ref+"\" s=\""+s+"\" t=\"inlineStr\"><is><t xml:space=\"preserve\">"+xesc(val)+"</t></is></c>";
+    }
+    var rows=[],merges=[];
+    var title=state.company+"【潮牛殿】排班表　民國"+(view.y-1911)+"年 "+pad(view.m)+"月";
+    var r1="<row r=\"1\" ht=\"22\" customHeight=\"1\">"+cell(1,1,title,1,false);
+    for(var c=2;c<=totalCols;c++) r1+=cell(c,1,"",1,false); r1+="</row>"; rows.push(r1);
+    merges.push("A1:"+colLetter(totalCols)+"1");
+    var r2="<row r=\"2\">"+cell(1,2,"",2,false)+cell(2,2,"日期",2,false);
+    for(var d=1;d<=N;d++) r2+=cell(2+d,2,d,2,true); r2+="</row>"; rows.push(r2);
+    var r3="<row r=\"3\">"+cell(1,3,"",2,false)+cell(2,3,"星期",2,false);
+    for(var d3=1;d3<=N;d3++) r3+=cell(2+d3,3,DOW[new Date(view.y,view.m-1,d3).getDay()],2,false); r3+="</row>"; rows.push(r3);
+    var row=4;
+    state.depts.forEach(function(dept){
+      var start=row;
+      var members=dept.staff.concat(dept.extras.map(function(e){return {id:e.id,name:e.name,text:e.text};}));
+      members.forEach(function(p,mi){
+        var rr="<row r=\""+row+"\">"+cell(1,row,mi===0?dept.name:"",6,false)+cell(2,row,p.name,3,false);
+        for(var d=1;d<=N;d++){var v=get(p.id,d);var st=p.text?4:(v?codeStyle(dept,v):4);rr+=cell(2+d,row,v,st,false);}
+        rr+="</row>"; rows.push(rr); row++;
+      });
+      if(members.length>1) merges.push("A"+start+":A"+(start+members.length-1));
+      dept.sums.forEach(function(sm){
+        var rr="<row r=\""+row+"\">"+cell(1,row,sm.label,5,false)+cell(2,row,"",5,false);
+        for(var d=1;d<=N;d++){var n=countSum(dept,sm.kind,d);rr+=cell(2+d,row,n?n:"",5,!!n);}
+        rr+="</row>"; rows.push(rr); merges.push("A"+row+":B"+row); row++;
+      });
+    });
+    var cols="<cols><col min=\"1\" max=\"1\" width=\"5\" customWidth=\"1\"/><col min=\"2\" max=\"2\" width=\"11\" customWidth=\"1\"/><col min=\"3\" max=\""+totalCols+"\" width=\"4.2\" customWidth=\"1\"/></cols>";
+    var mg="<mergeCells count=\""+merges.length+"\">"+merges.map(function(m){return "<mergeCell ref=\""+m+"\"/>";}).join("")+"</mergeCells>";
+    var sheet="<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">"+cols+"<sheetData>"+rows.join("")+"</sheetData>"+mg+"</worksheet>";
+
+    // styles.xml
+    var fonts="<fonts count=\"5\">"
+      +"<font><sz val=\"11\"/><name val=\"PingFang TC\"/></font>"
+      +"<font><b/><sz val=\"11\"/><name val=\"PingFang TC\"/></font>"
+      +"<font><b/><color rgb=\"FFFFFFFF\"/><sz val=\"11\"/><name val=\"PingFang TC\"/></font>"
+      +"<font><b/><sz val=\"14\"/><name val=\"PingFang TC\"/></font>"
+      +"<font><b/><color rgb=\"FF5B4310\"/><sz val=\"11\"/><name val=\"PingFang TC\"/></font></fonts>";
+    var fillArr=["<fill><patternFill patternType=\"none\"/></fill>","<fill><patternFill patternType=\"gray125\"/></fill>"];
+    colors.forEach(function(h){fillArr.push("<fill><patternFill patternType=\"solid\"><fgColor rgb=\"FF"+h.replace('#','').toUpperCase()+"\"/><bgColor indexed=\"64\"/></patternFill></fill>");});
+    var fills="<fills count=\""+fillArr.length+"\">"+fillArr.join("")+"</fills>";
+    var borders="<borders count=\"2\"><border><left/><right/><top/><bottom/><diagonal/></border>"
+      +"<border><left style=\"thin\"><color rgb=\"FFBFBFBF\"/></left><right style=\"thin\"><color rgb=\"FFBFBFBF\"/></right><top style=\"thin\"><color rgb=\"FFBFBFBF\"/></top><bottom style=\"thin\"><color rgb=\"FFBFBFBF\"/></bottom><diagonal/></border></borders>";
+    var ctr="<alignment horizontal=\"center\" vertical=\"center\"/>";
+    var xfs=[
+      "<xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\" xfId=\"0\"/>",
+      "<xf numFmtId=\"0\" fontId=\"3\" fillId=\"0\" borderId=\"0\" xfId=\"0\" applyFont=\"1\" applyAlignment=\"1\"><alignment horizontal=\"left\" vertical=\"center\"/></xf>",
+      "<xf numFmtId=\"0\" fontId=\"1\" fillId=\"0\" borderId=\"1\" xfId=\"0\" applyFont=\"1\" applyBorder=\"1\" applyAlignment=\"1\">"+ctr+"</xf>",
+      "<xf numFmtId=\"0\" fontId=\"1\" fillId=\"0\" borderId=\"1\" xfId=\"0\" applyFont=\"1\" applyBorder=\"1\" applyAlignment=\"1\"><alignment horizontal=\"left\" vertical=\"center\"/></xf>",
+      "<xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"1\" xfId=\"0\" applyBorder=\"1\" applyAlignment=\"1\">"+ctr+"</xf>",
+      "<xf numFmtId=\"0\" fontId=\"1\" fillId=\"0\" borderId=\"1\" xfId=\"0\" applyFont=\"1\" applyBorder=\"1\" applyAlignment=\"1\">"+ctr+"</xf>",
+      "<xf numFmtId=\"0\" fontId=\"1\" fillId=\"0\" borderId=\"1\" xfId=\"0\" applyFont=\"1\" applyBorder=\"1\" applyAlignment=\"1\">"+ctr+"</xf>"
+    ];
+    order.forEach(function(o){
+      xfs.push("<xf numFmtId=\"0\" fontId=\""+(o.ink?4:2)+"\" fillId=\""+(2+colorIdx[o.c])+"\" borderId=\"1\" xfId=\"0\" applyFont=\"1\" applyFill=\"1\" applyBorder=\"1\" applyAlignment=\"1\">"+ctr+"</xf>");
+    });
+    var styles="<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<styleSheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">"
+      +fonts+fills+borders+"<cellStyleXfs count=\"1\"><xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\"/></cellStyleXfs>"
+      +"<cellXfs count=\""+xfs.length+"\">"+xfs.join("")+"</cellXfs>"
+      +"<cellStyles count=\"1\"><cellStyle name=\"Normal\" xfId=\"0\" builtinId=\"0\"/></cellStyles></styleSheet>";
+
+    var sheetName=view.y+""+pad(view.m);
+    var ct="<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\"><Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/><Default Extension=\"xml\" ContentType=\"application/xml\"/><Override PartName=\"/xl/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/><Override PartName=\"/xl/worksheets/sheet1.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/><Override PartName=\"/xl/styles.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml\"/></Types>";
+    var relsRoot="<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument\" Target=\"xl/workbook.xml\"/></Relationships>";
+    var wb="<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\"><sheets><sheet name=\""+sheetName+"\" sheetId=\"1\" r:id=\"rId1\"/></sheets></workbook>";
+    var wbRels="<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"worksheets/sheet1.xml\"/><Relationship Id=\"rId2\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles\" Target=\"styles.xml\"/></Relationships>";
+    var blob=zipStore([
+      {name:"[Content_Types].xml",data:ct},
+      {name:"_rels/.rels",data:relsRoot},
+      {name:"xl/workbook.xml",data:wb},
+      {name:"xl/_rels/workbook.xml.rels",data:wbRels},
+      {name:"xl/styles.xml",data:styles},
+      {name:"xl/worksheets/sheet1.xml",data:sheet}
+    ]);
+    var a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+    a.download="潮牛殿排班_"+mkey()+".xlsx"; a.click(); setTimeout(function(){URL.revokeObjectURL(a.href);},800);
+    toast("已下載 Excel");
+  }
+
   /* ---- modal helpers ---- */
   function open(id){document.getElementById(id).classList.add("open");}
   document.querySelectorAll(".scrim").forEach(function(sc){
@@ -669,6 +792,7 @@
   document.getElementById("btnClearM").addEventListener("click",function(){
     if(confirm("清空本月所有排班？")){state.months[mkey()]={};save();renderAll();}
   });
+  document.getElementById("btnXlsx").addEventListener("click",exportXlsx);
   document.getElementById("btnCsv").addEventListener("click",exportCsv);
   document.getElementById("btnHours").addEventListener("click",exportHours);
   document.getElementById("btnPrint").addEventListener("click",function(){window.print();});
