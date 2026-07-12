@@ -297,7 +297,7 @@
 (function(){
   "use strict";
   var DOW=["日","一","二","三","四","五","六"];
-  var KEY="chaoniudian_roster_v5";
+  var KEY="chaoniudian_roster_v6";
   var state=load();
   var view=(function(){var d=new Date();return {y:d.getFullYear(),m:d.getMonth()+1};})();
   var brush="Ａ";
@@ -335,8 +335,9 @@
          codes:[ mk("Ａ","1000-1430 1630-2100",9,1,1,"#2E7D6B"),
                  mk("Ａ下","1430-2230",8,0,1,"#8E5AA6"),
                  mk("B","1030-1430 1630-2130",9,1,1,"#C2703D"),
+                 mk("B下","1630-2230",6,0,1,"#9E5A2E"),
                  mk("C","1030-1430 1630-2200",9.5,1,1,"#4B7A3F") ],
-         staff:[{id:uid(),name:"小胖"},{id:uid(),name:"益志"},{id:uid(),name:"垂玲"},{id:uid(),name:"馬克"},{id:uid(),name:"康"}],
+         staff:[{id:uid(),name:"小胖"},{id:uid(),name:"益志"},{id:uid(),name:"垂玲"},{id:uid(),name:"馬克"},{id:uid(),name:"康"},{id:uid(),name:"梅紅幸"}],
          extras:[],
          sums:[{label:"內早正",kind:"morning"},{label:"內晚正",kind:"evening"}]}
       ],
