@@ -247,7 +247,7 @@
 
   <div class="cols">
     <div class="card">
-      <h2><span class="tick"></span>本月工時統計<span class="r">工作時數／上班天數／休 · 例 · 年</span></h2>
+      <h2><span class="tick"></span>本月工時統計<span class="r">工作時數／上班天數／休 · 例 · 年 · 請 · 特</span></h2>
       <div id="hoursPanel"></div>
     </div>
     <div class="card">
@@ -297,7 +297,7 @@
 (function(){
   "use strict";
   var DOW=["日","一","二","三","四","五","六"];
-  var KEY="chaoniudian_roster_v4";
+  var KEY="chaoniudian_roster_v5";
   var state=load();
   var view=(function(){var d=new Date();return {y:d.getFullYear(),m:d.getMonth()+1};})();
   var brush="Ａ";
@@ -317,9 +317,11 @@
         {id:uid(),label:"休",color:"var(--rest)",ink:1},
         {id:uid(),label:"例",color:"var(--li)",ink:0},
         {id:uid(),label:"年",color:"var(--rest)",ink:1},
+        {id:uid(),label:"請",color:"#5F7A8C",ink:0},
+        {id:uid(),label:"特",color:"#9B6FA6",ink:0},
         {id:uid(),label:"W",color:"#6B7A85",ink:0}
       ],
-      extraCodes:[{id:uid(),label:"✓",color:"#2E9E5B",ink:0},{id:uid(),label:"O",color:"#5A7184",ink:0},{id:uid(),label:"N",color:"#8A6D3B",ink:0}],
+      extraCodes:[{id:uid(),label:"✓",color:"#2E9E5B",ink:0}],
       depts:[
         {id:"out",name:"外場",
          codes:[ mk("Ａ","1100-1430 1630-2200",9,1,1,"#2E7D6B"),
@@ -330,7 +332,7 @@
          extras:[{id:uid(),name:"中午包廂"},{id:uid(),name:"晚上包廂"},{id:uid(),name:"備註",text:1}],
          sums:[{label:"外早正",kind:"morning"},{label:"外晚正",kind:"evening"}]},
         {id:"in",name:"內場",
-         codes:[ mk("Ａ","1000-1430 1630-2030",8.5,1,1,"#2E7D6B"),
+         codes:[ mk("Ａ","1000-1430 1630-2100",9,1,1,"#2E7D6B"),
                  mk("Ａ下","1430-2230",8,0,1,"#8E5AA6"),
                  mk("B","1030-1430 1630-2130",9,1,1,"#C2703D"),
                  mk("C","1030-1430 1630-2200",9.5,1,1,"#4B7A3F") ],
@@ -500,7 +502,7 @@
   /* ---- hours panel ---- */
   function renderHours(){
     var N=daysInMonth();
-    var html="<table class='stat'><thead><tr><th class='name'>員工</th><th>工作時數</th><th>上班天數</th><th>休</th><th>例</th><th>年</th></tr></thead><tbody>";
+    var html="<table class='stat'><thead><tr><th class='name'>員工</th><th>工作時數</th><th>上班天數</th><th>休</th><th>例</th><th>年</th><th>請</th><th>特</th></tr></thead><tbody>";
     state.depts.forEach(function(dept){
       html+="<tr class='deptsep'><td colspan='6'>"+esc(dept.name)+"</td></tr>";
       dept.staff.forEach(function(p){
@@ -512,7 +514,7 @@
           else{r[v]=(r[v]||0)+1;}
         }
         html+="<tr><td class='name'>"+esc(p.name)+"</td><td class='hrs'>"+(Math.round(hrs*10)/10)+"</td><td>"+(days||"")+"</td>"
-          +"<td>"+(r["休"]||"")+"</td><td>"+(r["例"]||"")+"</td><td>"+(r["年"]||"")+"</td></tr>";
+          +"<td>"+(r["休"]||"")+"</td><td>"+(r["例"]||"")+"</td><td>"+(r["年"]||"")+"</td><td>"+(r["請"]||"")+"</td><td>"+(r["特"]||"")+"</td></tr>";
       });
     });
     html+="</tbody></table>";
@@ -535,7 +537,7 @@
     var rh="<div class='dept'>假別 / 其他</div><div class='rows'>";
     state.rest.concat(state.extraCodes).forEach(function(c){
       rh+="<div class='lgrow'><span class='lgtag' style='background:"+c.color+";color:"+(c.ink?"var(--rest-ink)":"#fff")+"'>"+esc(c.label)+"</span>"
-        +"<span class='lgtime'>"+(c.label==="休"?"休假":c.label==="例"?"例假":c.label==="年"?"年假":c.label==="W"?"待排/工讀":c.label==="✓"?"有人訂包廂":c.label==="O"?"包廂(午)":c.label==="N"?"包廂(晚)":"")+"</span></div>";
+        +"<span class='lgtime'>"+(c.label==="休"?"休假":c.label==="例"?"例假":c.label==="年"?"年假":c.label==="請"?"請假":c.label==="特"?"特假":c.label==="W"?"待排/工讀":c.label==="✓"?"有人訂包廂":"")+"</span></div>";
     });
     rh+="</div>"; rbox.innerHTML=rh; el.appendChild(rbox);
   }
@@ -633,12 +635,12 @@
   }
   function exportHours(){
     var N=daysInMonth();
-    var rows=[["潮牛殿 本月工時統計  民國"+(view.y-1911)+"年"+view.m+"月"],["組別","姓名","工作時數","上班天數","休","例","年"]];
+    var rows=[["潮牛殿 本月工時統計  民國"+(view.y-1911)+"年"+view.m+"月"],["組別","姓名","工作時數","上班天數","休","例","年","請","特"]];
     state.depts.forEach(function(dept){
       dept.staff.forEach(function(p){
         var hrs=0,days=0,r={};
         for(var d=1;d<=N;d++){var v=get(p.id,d);if(!v)continue;var c=codeByLabel(dept,v);if(c){hrs+=c.hours;days++;}else r[v]=(r[v]||0)+1;}
-        rows.push([dept.name,p.name,Math.round(hrs*10)/10,days,r["休"]||0,r["例"]||0,r["年"]||0]);
+        rows.push([dept.name,p.name,Math.round(hrs*10)/10,days,r["休"]||0,r["例"]||0,r["年"]||0,r["請"]||0,r["特"]||0]);
       });
     });
     downloadCsv(rows,"潮牛殿工時_"+mkey()+".csv");
