@@ -291,6 +291,15 @@
   <div class="mfoot"><span></span><button class="btn" data-close>關閉</button></div>
 </div></div>
 
+<!-- 備註輸入（頁面內建，不用瀏覽器彈窗，Artifact 沙箱可用）-->
+<div class="scrim" id="noteScrim"><div class="modal" style="max-width:420px">
+  <div class="mhead"><div><h3>備註</h3><div class="sub" id="noteSub">特殊狀況</div></div><button class="x" data-close>×</button></div>
+  <div class="mbody">
+    <input id="noteInput" class="titlefld" style="margin-bottom:0" placeholder="輸入特殊狀況（例：颱風提早打烊）">
+  </div>
+  <div class="mfoot"><button class="btn ghost" id="noteClear">清除</button><button class="btn" id="noteOk" style="background:var(--accent);color:#fff;border-color:var(--accent)">確定</button></div>
+</div></div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -472,11 +481,7 @@
     if(readonly)return;
     var td=e.target.closest("td.c"); if(!td)return;
     if(td.dataset.text==="1"){
-      var cur=get(td.dataset.row,+td.dataset.day);
-      var t=prompt("備註（特殊狀況）：",cur||"");
-      if(t===null)return;
-      t=t.trim(); set(td.dataset.row,+td.dataset.day,t);
-      td.textContent=t; td.setAttribute("title",t); td.className="c txt";
+      openNote(td);
       return;
     }
     var dept=deptById(td.dataset.dept);
@@ -783,6 +788,32 @@
 
   /* ---- modal helpers ---- */
   function open(id){document.getElementById(id).classList.add("open");}
+  function close(id){document.getElementById(id).classList.remove("open");}
+
+  /* ---- 備註輸入（頁面內建框，取代被沙箱擋掉的 prompt）---- */
+  var noteTd=null;
+  function openNote(td){
+    noteTd=td;
+    var inp=document.getElementById("noteInput");
+    inp.value=get(td.dataset.row,+td.dataset.day)||"";
+    var day=+td.dataset.day;
+    document.getElementById("noteSub").textContent=view.y+"/"+pad(view.m)+"/"+day+" 特殊狀況";
+    open("noteScrim");
+    setTimeout(function(){inp.focus();inp.select();},60);
+  }
+  function saveNote(val){
+    if(!noteTd)return;
+    val=(val||"").trim();
+    set(noteTd.dataset.row,+noteTd.dataset.day,val);
+    noteTd.textContent=val; noteTd.setAttribute("title",val); noteTd.className="c txt";
+    close("noteScrim"); noteTd=null;
+  }
+  document.getElementById("noteOk").addEventListener("click",function(){saveNote(document.getElementById("noteInput").value);});
+  document.getElementById("noteClear").addEventListener("click",function(){saveNote("");});
+  document.getElementById("noteInput").addEventListener("keydown",function(e){
+    if(e.key==="Enter"){e.preventDefault();saveNote(this.value);}
+  });
+
   document.querySelectorAll(".scrim").forEach(function(sc){
     sc.addEventListener("click",function(e){if(e.target===sc||e.target.hasAttribute("data-close"))sc.classList.remove("open");});
   });
@@ -798,9 +829,15 @@
   document.getElementById("btnStaff").addEventListener("click",function(){renderStaffEdit();open("staffScrim");});
   document.getElementById("btnCode").addEventListener("click",function(){renderCodeEdit();open("codeScrim");});
   document.getElementById("coEdit").addEventListener("input",function(){state.company=this.value;save();document.getElementById("coName").textContent=state.company;});
-  document.getElementById("btnClearM").addEventListener("click",function(){
-    if(confirm("清空本月所有排班？")){state.months[mkey()]={};save();renderAll();}
-  });
+  (function(){
+    var btn=document.getElementById("btnClearM"), armed=false, t0, orig=btn.textContent;
+    btn.addEventListener("click",function(){
+      if(!armed){ armed=true; btn.textContent="⚠ 再按一次清空本月"; btn.style.color="var(--under)";
+        clearTimeout(t0); t0=setTimeout(function(){armed=false;btn.textContent=orig;btn.style.color="";},3000); return; }
+      clearTimeout(t0); armed=false; btn.textContent=orig; btn.style.color="";
+      state.months[mkey()]={}; save(); renderAll(); toast("已清空本月");
+    });
+  })();
   document.getElementById("btnXlsx").addEventListener("click",exportXlsx);
   document.getElementById("btnCsv").addEventListener("click",exportCsv);
   document.getElementById("btnHours").addEventListener("click",exportHours);
