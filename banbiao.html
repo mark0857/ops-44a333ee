@@ -359,6 +359,12 @@
     for(var i=0;i<dept.codes.length;i++) if(dept.codes[i].label===label) return dept.codes[i];
     return null;
   }
+  // 先找本組；本組沒有該代號時，退而找其他組的定義（如 B下 只在內場，外場員工用到時仍能正確計算工時/人數/顏色）
+  function resolveCode(dept,label){
+    var c=codeByLabel(dept,label); if(c) return c;
+    for(var i=0;i<state.depts.length;i++){ if(state.depts[i]!==dept){ var c2=codeByLabel(state.depts[i],label); if(c2) return c2; } }
+    return null;
+  }
   function anyCodeMeta(label){
     // for coloring rest/extra/any label
     for(var i=0;i<state.rest.length;i++) if(state.rest[i].label===label) return {color:state.rest[i].color,ink:state.rest[i].ink,rest:true};
@@ -367,7 +373,7 @@
   }
   function cellStyle(dept,label){
     if(!label) return {bg:"",fg:""};
-    var c=codeByLabel(dept,label);
+    var c=resolveCode(dept,label);
     if(c) return {bg:c.color,fg:"#fff"};
     var m=anyCodeMeta(label);
     if(m) return {bg:m.color,fg:m.ink?"var(--rest-ink)":"#fff"};
@@ -456,7 +462,7 @@
   function countSum(dept,kind,day){
     var n=0;
     dept.staff.forEach(function(p){
-      var c=codeByLabel(dept,get(p.id,day));
+      var c=resolveCode(dept,get(p.id,day));
       if(c && c[kind]) n++;
     });
     return n;
@@ -510,7 +516,7 @@
         var hrs=0,days=0,r={};
         for(var d=1;d<=N;d++){
           var v=get(p.id,d); if(!v)continue;
-          var c=codeByLabel(dept,v);
+          var c=resolveCode(dept,v);
           if(c){hrs+=c.hours;days++;}
           else{r[v]=(r[v]||0)+1;}
         }
@@ -640,7 +646,7 @@
     state.depts.forEach(function(dept){
       dept.staff.forEach(function(p){
         var hrs=0,days=0,r={};
-        for(var d=1;d<=N;d++){var v=get(p.id,d);if(!v)continue;var c=codeByLabel(dept,v);if(c){hrs+=c.hours;days++;}else r[v]=(r[v]||0)+1;}
+        for(var d=1;d<=N;d++){var v=get(p.id,d);if(!v)continue;var c=resolveCode(dept,v);if(c){hrs+=c.hours;days++;}else r[v]=(r[v]||0)+1;}
         rows.push([dept.name,p.name,Math.round(hrs*10)/10,days,r["休"]||0,r["例"]||0,r["年"]||0,r["請"]||0,r["特"]||0]);
       });
     });
@@ -689,7 +695,7 @@
     state.depts.forEach(function(d){d.codes.forEach(function(c){regStyle(c.color,0);});});
     state.rest.forEach(function(r){regStyle(hex(r.color),r.ink?1:0);});
     state.extraCodes.forEach(function(e){regStyle(hex(e.color),e.ink?1:0);});
-    function codeStyle(dept,label){var c=codeByLabel(dept,label);if(c)return reg[c.color+"|0"];var m=anyCodeMeta(label);if(m)return reg[hex(m.color)+"|"+(m.ink?1:0)];return 4;}
+    function codeStyle(dept,label){var c=resolveCode(dept,label);if(c)return reg[c.color+"|0"];var m=anyCodeMeta(label);if(m)return reg[hex(m.color)+"|"+(m.ink?1:0)];return 4;}
 
     var totalCols=2+N;
     function cell(col,row,val,s,isNum){
