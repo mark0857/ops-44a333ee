@@ -148,7 +148,7 @@
     <div class="logo">🐂</div>
     <div>
       <h1>潮牛殿 · 開閉店 SOP</h1>
-      <div class="tag">點一下打勾 · 完成後回報 LINE</div>
+      <div class="tag" id="todayTag">點一下打勾 · 完成後回報 LINE</div>
     </div>
   </div>
 </header>
@@ -505,6 +505,12 @@ function buildPrint(){
 }
 
 /* ---------------- INIT ---------------- */
+(function setToday(){
+  const d=new Date();
+  const wd=["日","一","二","三","四","五","六"][d.getDay()];
+  const date=`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,"0")}/${String(d.getDate()).padStart(2,"0")}（${wd}）`;
+  $("#todayTag").innerHTML = `📅 今天 ${date} · 打勾後回報 LINE`;
+})();
 renderRoleTabs(); renderShiftTabs(); renderList(); buildPrint();
 </script>
 </body>
