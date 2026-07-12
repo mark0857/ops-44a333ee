@@ -283,6 +283,8 @@
   <div class="mbody"><div class="sharebox">
     <p class="hint" style="margin:0">連結內含本月排班內容，店員打開會看到你排好的班（唯讀，不能改）。班表改動後要重新分享新連結。</p>
     <textarea id="shareUrl" readonly></textarea>
+    <a class="btn big" id="shareOpen" target="_blank" rel="noopener" style="justify-content:center;background:var(--gold);border-color:var(--gold);color:#fff;text-decoration:none">🔗 開啟頁面 → 下載 Excel／列印</a>
+    <p class="hint" id="shareOpenHint" style="margin:0;display:none">💡 在這個 App 內無法下載 Excel／列印（安全限制）。要下載或列印，請按上面「開啟頁面」，到分享頁操作。</p>
     <div class="acts">
       <button class="btn big line" id="shareLine">💬 開啟 LINE 分享</button>
       <button class="btn big" id="shareCopy">📋 複製連結</button>
@@ -875,7 +877,11 @@
   function openShare(){
     var url=shareUrl();
     document.getElementById("shareUrl").value=url;
+    document.getElementById("shareOpen").setAttribute("href",url);
     document.getElementById("shareSub").textContent="民國"+(view.y-1911)+"年"+view.m+"月 · 唯讀連結";
+    // 只有在 App 內（受限 iframe，下載被擋）才顯示「請開頁面下載」提示
+    var inFrame=false; try{inFrame=(window.self!==window.top);}catch(e){inFrame=true;}
+    document.getElementById("shareOpenHint").style.display=inFrame?"":"none";
     open("shareScrim");
   }
   function initView(){
