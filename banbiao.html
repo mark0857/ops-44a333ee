@@ -110,6 +110,9 @@
   td.c:hover{filter:brightness(1.08);outline:2px solid var(--ink);outline-offset:-2px;}
   td.c.empty{color:transparent;background:transparent;}
   tr.noterow td.c{font-weight:700;}
+  td.c.txt{font-size:10px;font-weight:600;color:var(--ink-soft);text-align:left;padding:0 3px;
+    overflow:hidden;text-overflow:ellipsis;max-width:30px;background:transparent;}
+  td.c.txt:not(:empty){background:var(--surface-2);}
   /* summary rows */
   tr.sum td{background:var(--surface-2);font-weight:800;font-size:12px;height:24px;}
   tr.sum td.rowlabel{position:sticky;left:0;z-index:6;background:var(--surface-3);color:var(--ink-soft);
@@ -293,7 +296,7 @@
 (function(){
   "use strict";
   var DOW=["日","一","二","三","四","五","六"];
-  var KEY="chaoniudian_roster_v3";
+  var KEY="chaoniudian_roster_v4";
   var state=load();
   var view=(function(){var d=new Date();return {y:d.getFullYear(),m:d.getMonth()+1};})();
   var brush="Ａ";
@@ -315,15 +318,15 @@
         {id:uid(),label:"年",color:"var(--rest)",ink:1},
         {id:uid(),label:"W",color:"#6B7A85",ink:0}
       ],
-      extraCodes:[{id:uid(),label:"O",color:"#5A7184",ink:0},{id:uid(),label:"N",color:"#8A6D3B",ink:0}],
+      extraCodes:[{id:uid(),label:"✓",color:"#2E9E5B",ink:0},{id:uid(),label:"O",color:"#5A7184",ink:0},{id:uid(),label:"N",color:"#8A6D3B",ink:0}],
       depts:[
         {id:"out",name:"外場",
          codes:[ mk("Ａ","1100-1430 1630-2200",9,1,1,"#2E7D6B"),
                  mk("Ａ上","1030-1430",4,1,0,"#3B6EA5"),
                  mk("Ａ下","1700-2100",4,0,1,"#8E5AA6"),
                  mk("B","1130-1430 1630-2230",9,1,1,"#C2703D") ],
-         staff:[{id:uid(),name:"孟竹"},{id:uid(),name:"元劭"},{id:uid(),name:"彥伶"},{id:uid(),name:"馬克"},{id:uid(),name:"W"}],
-         extras:[{id:uid(),name:"中午包廂"},{id:uid(),name:"晚上包廂"}],
+         staff:[{id:uid(),name:"孟竹"},{id:uid(),name:"元劭"},{id:uid(),name:"彥伶"},{id:uid(),name:"馬克"},{id:uid(),name:"WORKYA"},{id:uid(),name:"WORKYB"}],
+         extras:[{id:uid(),name:"中午包廂"},{id:uid(),name:"晚上包廂"},{id:uid(),name:"備註",text:1}],
          sums:[{label:"外早正",kind:"morning"},{label:"外晚正",kind:"evening"}]},
         {id:"in",name:"內場",
          codes:[ mk("Ａ","1000-1430 1630-2030",8.5,1,1,"#2E7D6B"),
@@ -409,14 +412,20 @@
 
     state.depts.forEach(function(dept,di){
       if(di>0) h+="<tr class='groupgap'><td colspan='"+(N+2)+"'></td></tr>";
-      var rows=dept.staff.concat(dept.extras.map(function(e){return {id:e.id,name:e.name,note:true};}));
+      var rows=dept.staff.concat(dept.extras.map(function(e){return {id:e.id,name:e.name,note:true,text:e.text};}));
       rows.forEach(function(p,ri){
         h+="<tr class='"+(p.note?"noterow":"")+"'>";
         if(ri===0) h+="<td class='deptlabel' rowspan='"+rows.length+"'>"+esc(dept.name)+"</td>";
         h+="<td class='nm'>"+esc(p.name)+"</td>";
         for(var d3=1;d3<=N;d3++){
           var wd3=new Date(view.y,view.m-1,d3).getDay(); var we3=(wd3===0||wd3===6);
-          var val=get(p.id,d3); var st=cellStyle(dept,val);
+          var val=get(p.id,d3);
+          if(p.text){
+            var tcls="c txt"+(we3&&!val?" we":"")+(isThis&&d3===td_?" todaycol":"");
+            h+="<td class='"+tcls+"' data-text='1' data-row='"+p.id+"' data-dept='"+dept.id+"' data-day='"+d3+"' title='"+esc(val)+"'>"+esc(val)+"</td>";
+            continue;
+          }
+          var st=cellStyle(dept,val);
           var cls="c"+(val?"":" empty")+(we3&&!val?" we":"")+(isThis&&d3===td_?" todaycol":"");
           var sty=val?("background:"+st.bg+";color:"+st.fg):"";
           h+="<td class='"+cls+"' data-row='"+p.id+"' data-dept='"+dept.id+"' data-day='"+d3+"' style='"+sty+"'>"+esc(val)+"</td>";
@@ -452,6 +461,14 @@
   roster.addEventListener("click",function(e){
     if(readonly)return;
     var td=e.target.closest("td.c"); if(!td)return;
+    if(td.dataset.text==="1"){
+      var cur=get(td.dataset.row,+td.dataset.day);
+      var t=prompt("備註（特殊狀況）：",cur||"");
+      if(t===null)return;
+      t=t.trim(); set(td.dataset.row,+td.dataset.day,t);
+      td.textContent=t; td.setAttribute("title",t); td.className="c txt";
+      return;
+    }
     var dept=deptById(td.dataset.dept);
     set(td.dataset.row, +td.dataset.day, brush);
     // update just this cell + affected summaries + hours
@@ -465,6 +482,7 @@
     if(readonly)return;
     var td=e.target.closest("td.c"); if(!td)return; e.preventDefault();
     set(td.dataset.row,+td.dataset.day,"");
+    if(td.dataset.text==="1"){td.textContent="";td.setAttribute("title","");td.className="c txt";return;}
     td.textContent=""; td.className="c empty"; td.style.background=""; td.style.color="";
     refreshSums(); renderHours();
   });
@@ -516,7 +534,7 @@
     var rh="<div class='dept'>假別 / 其他</div><div class='rows'>";
     state.rest.concat(state.extraCodes).forEach(function(c){
       rh+="<div class='lgrow'><span class='lgtag' style='background:"+c.color+";color:"+(c.ink?"var(--rest-ink)":"#fff")+"'>"+esc(c.label)+"</span>"
-        +"<span class='lgtime'>"+(c.label==="休"?"休假":c.label==="例"?"例假":c.label==="年"?"年假":c.label==="W"?"待排/工讀":c.label==="O"?"包廂(午)":c.label==="N"?"包廂(晚)":"")+"</span></div>";
+        +"<span class='lgtime'>"+(c.label==="休"?"休假":c.label==="例"?"例假":c.label==="年"?"年假":c.label==="W"?"待排/工讀":c.label==="✓"?"有人訂包廂":c.label==="O"?"包廂(午)":c.label==="N"?"包廂(晚)":"")+"</span></div>";
     });
     rh+="</div>"; rbox.innerHTML=rh; el.appendChild(rbox);
   }
