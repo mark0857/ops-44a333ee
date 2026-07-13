@@ -281,12 +281,13 @@
 <div class="scrim" id="shareScrim"><div class="modal">
   <div class="mhead"><div><h3>分享本月班表</h3><div class="sub" id="shareSub">產生唯讀連結，店員點開即可查看</div></div><button class="x" data-close>×</button></div>
   <div class="mbody"><div class="sharebox">
-    <p class="hint" style="margin:0">連結內含本月排班內容，店員打開會看到你排好的班（唯讀，不能改）。班表改動後要重新分享新連結。</p>
+    <p class="hint" style="margin:0"><b>要給店員看班表：</b>用上方工具列的 <b>🖨 列印 → 目的地選「儲存為 PDF」</b> → 把 PDF 傳 LINE 群。這是最穩的方式（整月連結太長，無法直接貼 LINE）。</p>
+    <p class="hint" id="shareOpenHint" style="margin:0;display:none">💡 若在 App 內按「列印」沒反應（安全限制），請改用<b>本機版</b>，或按下面「開啟頁面」到正式網址那頁再列印／下載。</p>
+    <div style="height:1px;background:var(--line);margin:2px 0"></div>
+    <p class="hint" style="margin:0">下面連結<b>只給你自己</b>換裝置打開／下載用（太長，別傳 LINE）：</p>
     <textarea id="shareUrl" readonly onclick="this.focus();this.select();"></textarea>
-    <a class="btn big" id="shareOpen" target="_blank" rel="noopener" style="justify-content:center;background:var(--gold);border-color:var(--gold);color:#fff;text-decoration:none">🔗 開啟頁面 → 下載 Excel／列印</a>
-    <p class="hint" id="shareOpenHint" style="margin:0;display:none">💡 在這個 App 內，開新視窗／下載會被安全限制擋住。<b>最保險：按「複製連結」</b>，再貼到 LINE 給店員、或貼到瀏覽器新分頁打開（那頁可下載 Excel／列印）。上面的「開啟頁面／LINE」若沒反應就是被擋，用複製連結即可。</p>
+    <a class="btn big" id="shareOpen" target="_blank" rel="noopener" style="justify-content:center;background:var(--gold);border-color:var(--gold);color:#fff;text-decoration:none">🔗 開啟頁面（下載 Excel／列印）</a>
     <div class="acts">
-      <a class="btn big line" id="shareLine" target="_blank" rel="noopener" style="justify-content:center;text-decoration:none">💬 開啟 LINE 分享</a>
       <button class="btn big" id="shareCopy">📋 複製連結</button>
     </div>
   </div></div>
@@ -879,9 +880,7 @@
     var url=shareUrl();
     document.getElementById("shareUrl").value=url;
     document.getElementById("shareOpen").setAttribute("href",url);
-    var msg="🍜 潮牛殿 民國"+(view.y-1911)+"年"+view.m+"月 班表\n"+url;
-    document.getElementById("shareLine").setAttribute("href","https://line.me/R/msg/text/?"+encodeURIComponent(msg));
-    document.getElementById("shareSub").textContent="民國"+(view.y-1911)+"年"+view.m+"月 · 唯讀連結";
+    document.getElementById("shareSub").textContent="民國"+(view.y-1911)+"年"+view.m+"月";
     // 只有在 App 內（受限 iframe，下載被擋）才顯示「請開頁面下載」提示
     var inFrame=false; try{inFrame=(window.self!==window.top);}catch(e){inFrame=true;}
     document.getElementById("shareOpenHint").style.display=inFrame?"":"none";
