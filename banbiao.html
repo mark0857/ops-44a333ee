@@ -49,6 +49,8 @@
   .brand{display:flex;flex-direction:column;gap:2px;min-width:0;}
   .brand .co{font-size:12px;letter-spacing:.16em;color:var(--gold);font-weight:700;}
   .brand h1{margin:0;font-size:22px;letter-spacing:.05em;font-weight:800;}
+  .mtitle{font-weight:700;font-size:15px;color:var(--gold);margin-left:12px;letter-spacing:.02em;white-space:nowrap;}
+  @media print{ .mtitle{color:#000 !important;font-size:14px;} }
   .brand h1 b{color:var(--accent);}
   .mnav{margin-left:auto;display:flex;align-items:center;gap:6px;background:var(--surface);
     border:1px solid var(--line);border-radius:999px;padding:5px 6px;box-shadow:var(--shadow);}
@@ -214,7 +216,7 @@
   <header class="top">
     <div class="brand">
       <div class="co" id="coName">鼎京餐飲有限公司</div>
-      <h1><b>【潮牛殿】</b>排班表</h1>
+      <h1><b>【潮牛殿】</b>排班表<span class="mtitle" id="mTitle"></span></h1>
     </div>
     <div class="mnav">
       <button id="prevM" title="上個月">‹</button>
@@ -478,6 +480,7 @@
 
     document.getElementById("mLbl").firstChild.nodeValue=view.y+" / "+pad(view.m);
     document.getElementById("mSub").textContent="民國 "+(view.y-1911)+" 年 "+view.m+" 月";
+    document.getElementById("mTitle").textContent="民國 "+(view.y-1911)+" 年 "+pad(view.m)+" 月（"+view.y+"/"+pad(view.m)+"）";
     document.getElementById("coName").textContent=state.company;
   }
   function countSum(dept,kind,day){
