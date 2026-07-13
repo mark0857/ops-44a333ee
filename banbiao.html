@@ -191,14 +191,22 @@
   .sharebox .line:hover{background:#05a648;}
 
   @media print{
-    @page{size:A4 landscape;margin:8mm;}
-    body{background:#fff;color:#000;}
-    .brushbar,.tools,.mnav,.scrim,.foot,.cols .legend{display:none !important;}
-    .scroll{max-height:none;overflow:visible;box-shadow:none;border-color:#000;}
-    table.roster th,table.roster td{border-color:#999 !important;}
-    td.c{color:#000 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-    thead th,.cor,td.deptlabel,td.nm,tr.sum td{position:static !important;}
-    .cols{grid-template-columns:1fr;} .card{box-shadow:none;break-inside:avoid;}
+    @page{size:A4 landscape;margin:6mm;}
+    html,body{background:#fff;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .brushbar,.tools,.mnav,.scrim,.foot,.banner,.cols{display:none !important;}
+    .wrap{max-width:none;padding:0;margin:0;}
+    header.top{padding-bottom:6px;margin-bottom:6px;}
+    .scroll{max-height:none;overflow:visible;box-shadow:none;border:none;}
+    table.roster{width:100%;table-layout:fixed;border-collapse:collapse;}
+    table.roster th,table.roster td{border:0.4pt solid #999 !important;font-size:7px !important;
+      padding:0 !important;min-width:0 !important;width:auto !important;height:auto !important;
+      -webkit-print-color-adjust:exact;print-color-adjust:exact;overflow:hidden;}
+    thead th,.cor,td.deptlabel,td.nm,tr.sum td,tr.sum td.rowlabel{position:static !important;}
+    td.nm{width:50px !important;font-size:8px !important;text-align:center;}
+    td.deptlabel{width:14px !important;}
+    tr.sum td.rowlabel{width:60px !important;font-size:7px !important;}
+    td.c.txt{font-size:6px !important;}
+    /* 代號格保留底色＋白字（列印底色）*/
   }
 </style>
 
