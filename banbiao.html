@@ -282,11 +282,11 @@
   <div class="mhead"><div><h3>分享本月班表</h3><div class="sub" id="shareSub">產生唯讀連結，店員點開即可查看</div></div><button class="x" data-close>×</button></div>
   <div class="mbody"><div class="sharebox">
     <p class="hint" style="margin:0">連結內含本月排班內容，店員打開會看到你排好的班（唯讀，不能改）。班表改動後要重新分享新連結。</p>
-    <textarea id="shareUrl" readonly></textarea>
+    <textarea id="shareUrl" readonly onclick="this.focus();this.select();"></textarea>
     <a class="btn big" id="shareOpen" target="_blank" rel="noopener" style="justify-content:center;background:var(--gold);border-color:var(--gold);color:#fff;text-decoration:none">🔗 開啟頁面 → 下載 Excel／列印</a>
-    <p class="hint" id="shareOpenHint" style="margin:0;display:none">💡 在這個 App 內無法下載 Excel／列印（安全限制）。請按上面「開啟頁面」到分享頁下載；<b>若按了沒反應</b>，改按「複製連結」，再自己貼到瀏覽器新分頁打開即可。</p>
+    <p class="hint" id="shareOpenHint" style="margin:0;display:none">💡 在這個 App 內，開新視窗／下載會被安全限制擋住。<b>最保險：按「複製連結」</b>，再貼到 LINE 給店員、或貼到瀏覽器新分頁打開（那頁可下載 Excel／列印）。上面的「開啟頁面／LINE」若沒反應就是被擋，用複製連結即可。</p>
     <div class="acts">
-      <button class="btn big line" id="shareLine">💬 開啟 LINE 分享</button>
+      <a class="btn big line" id="shareLine" target="_blank" rel="noopener" style="justify-content:center;text-decoration:none">💬 開啟 LINE 分享</a>
       <button class="btn big" id="shareCopy">📋 複製連結</button>
     </div>
   </div></div>
@@ -879,6 +879,8 @@
     var url=shareUrl();
     document.getElementById("shareUrl").value=url;
     document.getElementById("shareOpen").setAttribute("href",url);
+    var msg="🍜 潮牛殿 民國"+(view.y-1911)+"年"+view.m+"月 班表\n"+url;
+    document.getElementById("shareLine").setAttribute("href","https://line.me/R/msg/text/?"+encodeURIComponent(msg));
     document.getElementById("shareSub").textContent="民國"+(view.y-1911)+"年"+view.m+"月 · 唯讀連結";
     // 只有在 App 內（受限 iframe，下載被擋）才顯示「請開頁面下載」提示
     var inFrame=false; try{inFrame=(window.self!==window.top);}catch(e){inFrame=true;}
@@ -908,13 +910,12 @@
 
   document.getElementById("btnShare").addEventListener("click",openShare);
   document.getElementById("shareCopy").addEventListener("click",function(){
-    var u=document.getElementById("shareUrl").value;
-    navigator.clipboard.writeText(u).then(function(){toast("已複製連結，可貼到 LINE");},function(){var t=document.getElementById("shareUrl");t.focus();t.select();toast("請長按複製");});
-  });
-  document.getElementById("shareLine").addEventListener("click",function(){
-    var u=document.getElementById("shareUrl").value;
-    var msg="🍜 潮牛殿 民國"+(view.y-1911)+"年"+view.m+"月 班表\n"+u;
-    window.open("https://line.me/R/msg/text/?"+encodeURIComponent(msg),"_blank");
+    var t=document.getElementById("shareUrl"); t.focus(); t.select();
+    var done=function(){toast("已複製連結，貼到 LINE 或瀏覽器即可");};
+    try{
+      if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t.value).then(done,function(){document.execCommand&&document.execCommand("copy");done();});return;}
+      document.execCommand&&document.execCommand("copy"); done();
+    }catch(e){ toast("已選取連結，請按 Cmd+C 複製"); }
   });
 
   function renderAll(){renderRoster();renderHours();renderLegend();}
