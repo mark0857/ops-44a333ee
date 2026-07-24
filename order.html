@@ -208,7 +208,7 @@
 
 <div class="actionbar">
   <div class="inner">
-    <button class="btn btn-ghost" id="clearBtn" title="清空整單">🗑</button>
+    <button class="btn btn-ghost" id="clearBtn" title="清空、開一張新單">＋開新單</button>
     <div class="cartinfo"><div class="a" id="cartCount">尚未點餐</div><div class="b" id="cartTotal">$0</div></div>
     <button class="btn btn-primary" id="viewBtn">看備餐單 →</button>
   </div>
@@ -690,9 +690,14 @@ function syncBar(){
   document.getElementById("cartTotal").textContent=money(cartTotal());
 }
 function clearAll(btn){
-  if(itemCount()===0){toast("目前是空的");return;}
-  if(btn._armed){clearTimeout(btn._t);btn._armed=false;cart={};comboLines=[];saveDraft();renderCats();renderMenu();syncBar();toast("已清空");return;}
-  btn._armed=true;btn._old=btn.textContent;btn.textContent="⚠";toast("再按一次清空整單");
+  if(itemCount()===0){toast("目前就是新單，沒東西要清");return;}
+  if(btn._armed){clearTimeout(btn._t);btn._armed=false;btn.textContent=btn._old;
+    cart={};comboLines=[];
+    document.getElementById("t_room").value="";document.getElementById("t_pax").value="";
+    document.getElementById("t_name").value="";document.getElementById("t_note").value="";
+    document.getElementById("t_date").value=todayStr();autoGrowNote();
+    saveDraft();renderCats();renderMenu();syncBar();toast("已開新單");return;}
+  btn._armed=true;btn._old=btn.textContent;btn.textContent="⚠ 再按一次";toast("再按一次清空、開新單");
   btn._t=setTimeout(function(){btn._armed=false;btn.textContent=btn._old;},3000);
 }
 
