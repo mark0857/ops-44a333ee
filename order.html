@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="潮牛殿點餐">
+<meta name="theme-color" content="#F97316">
+<title>潮牛殿 · 包廂點餐備餐單</title>
+<style>
+  :root{
+    --orange:#F97316; --orange-soft:#FFF3E8; --orange-line:#FCD9B6;
+    --red:#C1272D; --red-soft:#FBEAEA;
+    --ink:#1F2430; --sub:#8A93A3; --line:#EDEFF3; --bg:#F7F8FA; --card:#fff;
+    --ok:#16A34A; --ok-soft:#E7F6EC;
+    --treat:#7C3AED; --treat-soft:#F3EEFE;
+    --shadow:0 6px 20px rgba(23,30,45,.06);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.5;padding-bottom:88px}
+  .wrap{max-width:760px;margin:0 auto;padding:0 14px}
+
+  header{padding:16px 14px 2px}
+  .brand{display:flex;align-items:center;gap:11px;max-width:760px;margin:0 auto}
+  .logo{width:46px;height:46px;border-radius:14px;background:var(--orange);display:flex;align-items:center;
+    justify-content:center;font-size:24px;box-shadow:var(--shadow)}
+  .brand h1{font-size:19px;margin:0;font-weight:800;letter-spacing:.5px}
+  .brand .tag{font-size:11.5px;color:var(--sub);margin-top:2px;font-weight:600}
+
+  /* 桌單資訊 */
+  .ticket{background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:6px 6px;margin:12px 0 8px}
+  .tkrow{display:flex;gap:6px;flex-wrap:wrap}
+  .tkf{flex:1;min-width:88px;display:flex;flex-direction:column;padding:6px 8px}
+  .tkf label{font-size:10.5px;font-weight:800;color:var(--sub);margin-bottom:2px}
+  .tkf input{border:none;outline:none;font-size:15px;font-weight:700;font-family:inherit;background:transparent;
+    color:var(--ink);width:100%;min-width:0;-webkit-appearance:none}
+  .tkf input::placeholder{color:#C7CDD6;font-weight:600}
+  .tkf.dt{flex:0 0 auto}
+
+  /* 分類 tab */
+  .cats{display:flex;gap:7px;overflow-x:auto;padding:4px 0 2px;margin:2px 0 8px;scrollbar-width:none}
+  .cats::-webkit-scrollbar{display:none}
+  .cat{white-space:nowrap;padding:8px 14px;border-radius:999px;border:1.5px solid var(--line);background:#fff;
+    font-size:13.5px;font-weight:700;color:var(--sub);cursor:pointer;transition:.15s;font-family:inherit;position:relative}
+  .cat.active{border-color:var(--orange);color:var(--orange);background:var(--orange-soft)}
+  .cat .dot{display:inline-block;min-width:16px;height:16px;line-height:16px;text-align:center;background:var(--orange);
+    color:#fff;border-radius:999px;font-size:10.5px;font-weight:800;margin-left:5px;padding:0 3px;vertical-align:1px}
+
+  .catname{font-size:14px;color:var(--orange);font-weight:800;margin:6px 2px 8px;display:flex;align-items:center;gap:6px}
+  .catname small{color:var(--sub);font-weight:600;font-size:11.5px}
+
+  /* 品項 */
+  .list{background:var(--card);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:14px}
+  .row{display:flex;align-items:center;gap:10px;padding:11px 13px;border-top:1px solid var(--line)}
+  .row:first-child{border-top:none}
+  .row.picked{background:var(--orange-soft)}
+  .rb{flex:1;min-width:0}
+  .rn{font-size:15px;font-weight:700;word-break:break-word}
+  .rn .up{font-size:10.5px;font-weight:800;color:var(--red);background:var(--red-soft);padding:1px 6px;border-radius:6px;margin-left:6px;vertical-align:1px;white-space:nowrap}
+  .rdesc{font-size:11.5px;color:var(--sub);font-weight:600;margin-top:3px;line-height:1.45}
+  .rp{font-size:14px;font-weight:800;color:var(--ink);flex:none;font-variant-numeric:tabular-nums;min-width:44px;text-align:right}
+  .rp.free{color:var(--sub);font-weight:700}
+
+  .stepper{flex:none;display:flex;align-items:center;background:var(--bg);border-radius:11px;padding:3px;border:1.5px solid var(--line)}
+  .row.picked .stepper{border-color:var(--orange-line);background:#fff}
+  .step{width:34px;height:34px;border:none;background:transparent;font-size:22px;font-weight:700;color:var(--orange);
+    cursor:pointer;font-family:inherit;border-radius:8px;display:flex;align-items:center;justify-content:center;line-height:1}
+  .step:active{background:var(--orange-soft)}
+  .step.minus{color:#C7723A}
+  .qn{width:34px;text-align:center;font-size:16px;font-weight:800;color:var(--ink)}
+  .qn.zero{color:#C7CDD6}
+
+  /* 套餐卡 */
+  .combo{padding:13px 14px;border-top:1px solid var(--line)}
+  .combo:first-child{border-top:none}
+  .combo .ch{display:flex;align-items:baseline;gap:8px}
+  .combo .cn{font-size:16px;font-weight:800}
+  .combo .cp{margin-left:auto;font-size:16px;font-weight:800;color:var(--orange)}
+  .combo .cd{font-size:11.5px;color:var(--sub);font-weight:600;margin-top:3px;line-height:1.5}
+  .combo .addcombo{margin-top:9px;width:100%;border:1.5px solid var(--orange);background:var(--orange);color:#fff;
+    border-radius:11px;padding:11px;font-size:14.5px;font-weight:800;font-family:inherit;cursor:pointer}
+  .combo .added{margin-top:9px;background:var(--orange-soft);border:1.5px solid var(--orange-line);border-radius:11px;padding:10px 12px}
+  .combo .added .ah{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:#C15C10}
+  .combo .added .ah .cnt{margin-left:auto;font-weight:700}
+  .combo .added .adet{font-size:12px;color:#8a5a2a;font-weight:600;margin-top:5px;line-height:1.55;white-space:pre-wrap}
+  .combo .added .abtns{display:flex;gap:8px;margin-top:9px}
+  .combo .added .abtns button{flex:1;border:1.5px solid var(--orange-line);background:#fff;color:#C15C10;
+    border-radius:9px;padding:8px;font-size:12.5px;font-weight:800;font-family:inherit;cursor:pointer}
+
+  /* footer */
+  .actionbar{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.94);
+    backdrop-filter:saturate(180%) blur(12px);-webkit-backdrop-filter:saturate(180%) blur(12px);
+    border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom));z-index:20}
+  .actionbar .inner{max-width:760px;margin:0 auto;display:flex;gap:10px;align-items:center}
+  .cartinfo{flex:1;min-width:0}
+  .cartinfo .a{font-size:12px;color:var(--sub);font-weight:700}
+  .cartinfo .b{font-size:20px;font-weight:800;color:var(--ink);line-height:1.1}
+  .btn{border:none;border-radius:13px;padding:14px 18px;font-size:15.5px;font-weight:800;font-family:inherit;cursor:pointer;transition:.12s;white-space:nowrap}
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--orange);color:#fff;box-shadow:0 6px 16px rgba(249,115,22,.30)}
+  .btn-ghost{background:#fff;border:1.5px solid var(--line);color:var(--sub);padding:14px}
+
+  /* sheet */
+  .mask{position:fixed;inset:0;background:rgba(20,25,35,.45);opacity:0;pointer-events:none;transition:.2s;z-index:40}
+  .mask.show{opacity:1;pointer-events:auto}
+  .sheet{position:fixed;left:0;right:0;bottom:0;background:#fff;border-radius:22px 22px 0 0;z-index:45;
+    padding:14px 16px calc(14px + env(safe-area-inset-bottom));transform:translateY(102%);transition:.28s cubic-bezier(.2,.8,.2,1);
+    max-width:760px;margin:0 auto;box-shadow:0 -8px 30px rgba(0,0,0,.15);max-height:94vh;overflow-y:auto}
+  .sheet.show{transform:translateY(0)}
+  .grab{width:40px;height:5px;border-radius:999px;background:#E2E6EC;margin:0 auto 12px}
+  .sheet h3{margin:0 0 3px;font-size:19px;font-weight:800;display:flex;align-items:baseline;gap:8px}
+  .sheet h3 .hp{margin-left:auto;color:var(--orange)}
+  .sheet .hsub{font-size:12.5px;color:var(--sub);font-weight:600;margin-bottom:12px}
+
+  .choice{margin-bottom:14px}
+  .choice .cl{font-size:13.5px;font-weight:800;margin-bottom:7px;display:flex;align-items:center;gap:7px}
+  .choice .cl .need{font-size:11px;font-weight:800;padding:1px 8px;border-radius:999px}
+  .choice .cl .need.ok{background:var(--ok-soft);color:var(--ok)}
+  .choice .cl .need.wait{background:var(--red-soft);color:var(--red)}
+  .opts{display:flex;flex-wrap:wrap;gap:7px}
+  .opt{padding:9px 13px;border-radius:11px;border:1.5px solid var(--line);background:#fff;font-size:13.5px;
+    font-weight:700;color:var(--ink);cursor:pointer;font-family:inherit;transition:.12s}
+  .opt.on{border-color:var(--orange);background:var(--orange-soft);color:#C15C10}
+  .opt.dim{opacity:.4}
+  .optq{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:11px;border:1.5px solid var(--line);
+    background:#fff;margin-bottom:7px}
+  .optq.on{border-color:var(--orange-line);background:var(--orange-soft)}
+  .optq .qn2{flex:1;font-size:14px;font-weight:700}
+  .optq .qp{font-size:12px;color:var(--sub);font-weight:700}
+  .miniq{display:flex;align-items:center;background:#fff;border-radius:9px;border:1.5px solid var(--line)}
+  .miniq button{width:30px;height:30px;border:none;background:transparent;font-size:19px;color:var(--orange);cursor:pointer;font-family:inherit}
+  .miniq span{width:26px;text-align:center;font-size:14px;font-weight:800}
+  .fixed-list{background:var(--bg);border-radius:11px;padding:10px 12px;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:14px;line-height:1.7}
+  .fixed-list .ft{font-size:11px;color:var(--sub);font-weight:800;margin-bottom:3px}
+
+  .sbtns{display:flex;gap:10px;margin-top:8px;position:sticky;bottom:0;background:#fff;padding:8px 0 2px}
+  .sbtn{flex:1;text-align:center;border:none;border-radius:13px;padding:15px;font-size:16px;font-weight:800;font-family:inherit;cursor:pointer}
+  .sbtn.go{background:var(--orange);color:#fff}
+  .sbtn.go:disabled{background:#F1C9A6;cursor:not-allowed}
+  .sbtn.sec{flex:none;width:88px;background:#fff;border:1.5px solid var(--line);color:var(--sub)}
+  .sbtn.rm{flex:none;width:auto;padding:15px 16px;background:#fff;border:1.5px solid #F4C4C4;color:#D14343}
+
+  /* 備餐單預覽 */
+  .prev{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+  .prev .pt{font-size:16px;font-weight:800;margin-bottom:2px}
+  .prev .ps{font-size:12.5px;color:var(--sub);font-weight:600;margin-bottom:10px}
+  .pgrp{margin-bottom:11px}
+  .pgrp .gt{font-size:12px;font-weight:800;color:var(--orange);border-bottom:1.5px solid var(--orange-line);padding-bottom:3px;margin-bottom:6px}
+  .pit{display:flex;align-items:flex-start;gap:8px;font-size:13.5px;padding:3px 0}
+  .pit .pnm{flex:1;font-weight:600;line-height:1.5}
+  .pit .pnm .sel{display:block;font-size:12px;color:var(--sub);font-weight:600;margin-top:2px;white-space:pre-wrap;line-height:1.5}
+  .pit .pq{flex:none;font-weight:800;color:var(--sub);font-size:12.5px}
+  .pit .pp{flex:none;font-weight:700;font-variant-numeric:tabular-nums;min-width:48px;text-align:right}
+  .pit .tg{flex:none;border:1.5px solid var(--line);background:#fff;border-radius:8px;padding:4px 8px;font-size:11px;font-weight:800;color:var(--sub);cursor:pointer;font-family:inherit}
+  .pit .tg.on{background:var(--treat-soft);border-color:#D7C3F5;color:var(--treat)}
+  .pit.treat .pnm{color:var(--treat)}
+  .pit.treat .pp{color:var(--treat)}
+  .ptot{border-top:2px solid var(--line);margin-top:8px;padding-top:9px;display:flex;flex-direction:column;gap:4px}
+  .ptr{display:flex;justify-content:space-between;font-size:13.5px;font-weight:700}
+  .ptr.grand{font-size:18px;font-weight:800;color:var(--orange)}
+  .ptr .warn{font-size:11.5px;color:var(--red);font-weight:800}
+  .minhint{font-size:11.5px;font-weight:700;padding:6px 10px;border-radius:9px;margin-top:6px}
+  .minhint.under{background:var(--red-soft);color:var(--red)}
+  .minhint.pass{background:var(--ok-soft);color:var(--ok)}
+
+  .toast{position:fixed;left:50%;bottom:110px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;
+    padding:12px 20px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:60;max-width:88vw;text-align:center}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .empty{text-align:center;color:var(--sub);font-size:14px;font-weight:600;padding:30px 16px;line-height:1.8}
+  .hidden{display:none !important}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">🐂</div>
+    <div>
+      <h1>潮牛殿 · 包廂點餐</h1>
+      <div class="tag">先點好 → 出備餐單 → 傳同事備餐</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="ticket">
+    <div class="tkrow">
+      <div class="tkf dt"><label>日期</label><input id="t_date" type="date"></div>
+      <div class="tkf"><label>包廂 / 桌</label><input id="t_room" type="text" placeholder="例：A包廂"></div>
+      <div class="tkf"><label>人數</label><input id="t_pax" type="text" inputmode="numeric" placeholder="幾人"></div>
+      <div class="tkf"><label>客人 / 團體（選填）</label><input id="t_name" type="text" placeholder="例：力行獅子會"></div>
+    </div>
+  </div>
+
+  <div class="cats" id="cats"></div>
+  <div id="menu"></div>
+</div>
+
+<div class="actionbar">
+  <div class="inner">
+    <button class="btn btn-ghost" id="clearBtn" title="清空整單">🗑</button>
+    <div class="cartinfo"><div class="a" id="cartCount">尚未點餐</div><div class="b" id="cartTotal">$0</div></div>
+    <button class="btn btn-primary" id="viewBtn">看備餐單 →</button>
+  </div>
+</div>
+
+<div class="mask" id="mask"></div>
+<div class="sheet" id="sheet"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===================== 菜單資料 ===================== */
+var STORE="潮牛殿", ROOM_MIN=10000, PERSON_MIN=700, SERVICE=0.10;
+var YY_PRICE=100, BEEF_UP=100;   // 鴛鴦鍋加價、上選升特選加價
+var COMBOS=[
+  {id:"c1",name:"嚐鮮套餐",price:1288,tag:"推薦",desc:"約1–2人",
+   fixed:[],
+   choices:[
+     {key:"鍋底",type:"pot",from:["招牌牛骨鍋","潮系麻辣鍋","鮑魚海味鍋"]},
+     {key:"溫體牛",type:"beef",count:1,base:"上選溫體牛",up:"特選溫體牛"},
+     {key:"手工餃（三選二 · 2顆/份）",type:"check",pick:2,from:["三記魚餃","金盞花手工蛋餃","霸王荸薺燕餃"]},
+     {key:"手工丸（四選二 · 2顆/份）",type:"check",pick:2,from:["剝皮辣椒牛肉丸","起司牛肉丸","芋頭貢丸","花枝丸"]},
+     {key:"258熱炒（擇一）",type:"radio",pick:1,from:["高麗菜炒牛肉","芥蘭菜炒牛肉","溫泉空心菜炒牛肉","銀芽炒牛肉","泡菜炒松阪豬","蕃茄炒牛骨髓","熱炒綜合海鮮"]},
+     {key:"主食（共2份）",type:"qty",total:2,from:["養生雞蛋","無米樂白飯","讚岐烏龍麵","刀削麵","冰見烏龍麵",{n:"冰見撥雲月見麵（升級）",p:188}]}
+   ],
+   upgrades:[{name:"加點牛尾／份",price:150}]},
+  {id:"c2",name:"歡聚套餐",price:2488,tag:"推薦",desc:"約3–4人",
+   fixed:["滷牛三寶 ×1"],
+   choices:[
+     {key:"鍋底",type:"pot",from:["招牌牛骨鍋","潮系麻辣鍋","鮑魚海味鍋"]},
+     {key:"溫體牛",type:"beef",count:2,base:"上選溫體牛",up:"特選溫體牛"},
+     {key:"手工餃（三選三 · 4顆/份）",type:"check",pick:3,from:["三記魚餃","金盞花手工蛋餃","霸王荸薺燕餃"]},
+     {key:"手工丸（四選三 · 4顆/份）",type:"check",pick:3,from:["剝皮辣椒牛肉丸","起司牛肉丸","芋頭貢丸","花枝丸"]},
+     {key:"258熱炒（擇一）",type:"radio",pick:1,from:["高麗菜炒牛肉","芥蘭菜炒牛肉","溫泉空心菜炒牛肉","銀芽炒牛肉","泡菜炒松阪豬","蕃茄炒牛骨髓","熱炒綜合海鮮"]},
+     {key:"主食（共4份）",type:"qty",total:4,from:["養生雞蛋","無米樂白飯","讚岐烏龍麵","刀削麵","冰見烏龍麵",{n:"冰見撥雲月見麵（升級）",p:188}]}
+   ],
+   upgrades:[{name:"加點牛尾／份",price:150}]}
+];
+var CATS=[
+  {k:"主鍋",note:"單點鍋底",items:[
+    {n:"招牌牛骨鍋",p:420,d:"高麗菜、水果玉米、蕃茄、白蘿蔔、鴻禧菇、金針菇"},
+    {n:"潮系麻辣鍋",p:420,d:"鴨血、豆腐、麻辣魚蛋"},
+    {n:"鮑魚海味鍋",p:420,d:"高麗菜、水果玉米、蕃茄、白蘿蔔、鴻禧菇、金針菇、珍珠鮑魚"},
+    {n:"升級鴛鴦鍋（三擇二）",p:150,up:1},{n:"加點牛尾（優惠價/份·限乙份）",p:150,up:1}
+  ]},
+  {k:"溫體牛",items:[{n:"上選溫體牛",p:320},{n:"特選溫體牛（限量）",p:480}]},
+  {k:"肉類·內臟",items:[
+    {n:"牛百葉",p:180},{n:"牛雜",p:180},{n:"牛骨髓",p:250},{n:"牛尾",p:250},{n:"脆牛胸",p:380},
+    {n:"美國PRIME無骨牛小排",p:680},{n:"A5日本紐約客和牛",p:1380},{n:"伊比利豬",p:380},{n:"手切松阪豬",p:320},{n:"去骨雞腿肉",p:180}
+  ]},
+  {k:"海鮮",items:[{n:"珍珠鮑魚",p:188},{n:"鮮甜白蝦",p:188},{n:"懶人草蝦",p:258},{n:"龍虎斑菲力",p:288},{n:"2S生食級干貝",p:388}]},
+  {k:"熱炒",items:[
+    {n:"高麗菜炒牛肉",p:258},{n:"芥蘭菜炒牛肉",p:258},{n:"溫泉空心菜炒牛肉（限量）",p:258},{n:"銀芽炒牛肉",p:258},
+    {n:"泡菜炒松阪豬",p:258},{n:"蕃茄炒牛骨髓",p:258},{n:"熱炒綜合海鮮",p:258},{n:"清炒時蔬",p:158}
+  ]},
+  {k:"熟食",items:[
+    {n:"麻辣魚蛋",p:88},{n:"水晶魚皮",p:98},{n:"麻辣雙寶",p:128},{n:"紅潮蝦仁抄手",p:168},{n:"川味牛雜",p:228},
+    {n:"鐵板牛舌",p:258},{n:"炙燒松阪豬",p:258},{n:"滷牛三寶",p:388}
+  ]},
+  {k:"火鍋料",items:[
+    {n:"鴨血",p:68},{n:"豆腐",p:68},{n:"黃金魚蛋",p:68},{n:"腐竹",p:88},{n:"大豆皮",p:88},{n:"竹笙",p:128},
+    {n:"鈴鈴卷",p:128},{n:"剝皮辣椒牛肉丸",p:128},{n:"爆漿起司牛肉丸",p:128},{n:"芋頭貢丸",p:128},{n:"花枝丸",p:128},
+    {n:"金盞花手工蛋餃",p:128},{n:"三記魚餃",p:128},{n:"霸王荸薺燕餃",p:128}
+  ]},
+  {k:"蔬菜",items:[
+    {n:"白蘿蔔",p:60},{n:"牛蕃茄",p:60},{n:"高麗菜",p:80},{n:"娃娃菜",p:80},{n:"玉米筍",p:80},{n:"蓮藕片",p:80},
+    {n:"水蓮",p:80},{n:"水果玉米",p:80},{n:"茼蒿（季節）",p:80},{n:"奶油波士頓",p:120},{n:"金針菇",p:60},{n:"鴻禧菇",p:80}
+  ]},
+  {k:"主食",items:[
+    {n:"養生雞蛋",p:20},{n:"無米樂白飯",p:25},{n:"讚岐烏龍麵",p:40},{n:"刀削麵",p:40},{n:"冰見烏龍麵",p:80},{n:"冰見撥雲月見麵",p:268}
+  ]},
+  {k:"無酒精",items:[
+    {n:"可口可樂",p:40},{n:"蘋果西打",p:40},{n:"可爾必思",p:40},{n:"王老吉",p:55},{n:"冷萃四季春茶",p:70},{n:"冷萃蜜香烏龍茶",p:70},
+    {n:"仙草茶",p:80},{n:"古早味紅茶",p:80},{n:"誠意奶茶",p:90},{n:"冬瓜檸檬",p:90},{n:"台灣素烏梅汁",p:150}
+  ]},
+  {k:"酒",items:[
+    {n:"台灣金牌啤酒",p:110},{n:"台灣18天啤酒",p:130},{n:"海尼根",p:130},{n:"麒麟一番搾",p:130},
+    {n:"燒酒-水蜜桃",p:240},{n:"燒酒-白葡萄",p:240},{n:"燒酒-養樂多",p:240},{n:"三笑樂",p:400},
+    {n:"拉菲堡卡本內蘇維翁紅酒2020",p:1200},{n:"塔巴利希哈紅葡萄酒2018",p:1200},{n:"格蘭菲迪15年",p:2600},
+    {n:"蘇格登12年",p:2600},{n:"百富12年",p:2800},{n:"大摩12年",p:3300}
+  ]}
+];
+
+/* ===================== 狀態 ===================== */
+var LS="cndorder::draft";
+var curCat=0;               // 0 = 套餐, 1.. = CATS
+var cart={};                // key -> {name,price,qty,cat,treat}  (單點)
+var comboLines=[];          // {uid,comboId,name,price,sel:{choiceKey:[...]},upgrades:{name:qty},treat}
+var ticket={date:"",room:"",pax:"",name:""};
+
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function todayStr(){var d=new Date(),z=function(x){return(x<10?"0":"")+x;};return d.getFullYear()+"-"+z(d.getMonth()+1)+"-"+z(d.getDate());}
+function money(n){n=Math.round(Number(n)||0);return "$"+n.toLocaleString("en-US");}
+function esc(s){return(s==null?"":String(s)).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+function toast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove("show");},1800);}
+
+function saveDraft(){
+  ticket={date:document.getElementById("t_date").value,room:document.getElementById("t_room").value,
+    pax:document.getElementById("t_pax").value,name:document.getElementById("t_name").value};
+  try{localStorage.setItem(LS,JSON.stringify({cart:cart,comboLines:comboLines,ticket:ticket}));}catch(e){}
+}
+function loadDraft(){
+  try{var d=JSON.parse(localStorage.getItem(LS)||"null");if(d){cart=d.cart||{};comboLines=d.comboLines||[];ticket=d.ticket||ticket;}}catch(e){}
+}
+
+/* ===================== 金額 ===================== */
+function comboLineTotal(cl){
+  if(cl.treat) return 0;
+  var c=comboById(cl.comboId), t=cl.price;
+  c.choices.forEach(function(ch){
+    var v=cl.sel[ch.key];
+    if(ch.type==="pot"){ if(v.mode==="yuanyang")t+=YY_PRICE; }
+    else if(ch.type==="beef"){ t+=(v.special||0)*BEEF_UP; }
+    else if(ch.type==="qty"){ ch.from.forEach(function(o){var nm=o.n||o,p=o.p||0;if(p&&v[nm])t+=p*v[nm];}); }
+  });
+  var u=c.upgrades;
+  for(var k in cl.upgrades){var up=u.filter(function(x){return x.name===k;})[0];if(up)t+=up.price*cl.upgrades[k];}
+  return t;
+}
+function cartTotal(){
+  var t=0,k;
+  for(k in cart){if(!cart[k].treat)t+=cart[k].price*cart[k].qty;}
+  comboLines.forEach(function(cl){t+=comboLineTotal(cl);});
+  return t;
+}
+function itemCount(){
+  var n=0,k;for(k in cart)n+=cart[k].qty;n+=comboLines.length;return n;
+}
+function comboById(id){return COMBOS.filter(function(c){return c.id===id;})[0];}
+
+/* ===================== 分類 tab ===================== */
+function renderCats(){
+  var el=document.getElementById("cats");
+  var comboN=comboLines.length;
+  var html='<button class="cat'+(curCat===0?" active":"")+'" data-c="0">🔥 套餐'+(comboN?'<span class="dot">'+comboN+'</span>':'')+'</button>';
+  CATS.forEach(function(c,i){
+    var n=0;c.items.forEach(function(it){var k=it.n;if(cart[k])n+=cart[k].qty;});
+    html+='<button class="cat'+(curCat===i+1?" active":"")+'" data-c="'+(i+1)+'">'+esc(c.k)+(n?'<span class="dot">'+n+'</span>':'')+'</button>';
+  });
+  el.innerHTML=html;
+  Array.prototype.forEach.call(el.querySelectorAll(".cat"),function(b){
+    b.addEventListener("click",function(){curCat=+b.getAttribute("data-c");renderCats();renderMenu();});
+  });
+}
+
+/* ===================== 菜單 ===================== */
+function renderMenu(){
+  var box=document.getElementById("menu");
+  if(curCat===0){ renderCombos(box); return; }
+  var cat=CATS[curCat-1];
+  var html='<div class="catname">'+esc(cat.k)+(cat.note?' <small>'+esc(cat.note)+'</small>':'')+'</div><div class="list">';
+  html+=cat.items.map(function(it){
+    var q=cart[it.n]?cart[it.n].qty:0;
+    return '<div class="row'+(q?" picked":"")+'" data-n="'+esc(it.n)+'">'+
+      '<div class="rb"><div class="rn">'+esc(it.n)+(it.up?'<span class="up">加價</span>':'')+'</div>'+
+        (it.d?'<div class="rdesc">'+esc(it.d)+'</div>':'')+'</div>'+
+      '<div class="rp'+(it.p?'':' free')+'">'+(it.up?"+":"")+money(it.p)+'</div>'+
+      '<div class="stepper"><button class="step minus" data-a="-">−</button>'+
+        '<span class="qn'+(q?"":" zero")+'">'+q+'</span>'+
+        '<button class="step" data-a="+">＋</button></div>'+
+    '</div>';
+  }).join("")+'</div>';
+  box.innerHTML=html;
+  Array.prototype.forEach.call(box.querySelectorAll(".row"),function(r){
+    var name=r.getAttribute("data-n");
+    var it=cat.items.filter(function(x){return x.n===name;})[0];
+    r.querySelectorAll(".step").forEach(function(s){
+      s.addEventListener("click",function(){ bump(it,cat.k,s.getAttribute("data-a")==="+"?1:-1); });
+    });
+  });
+}
+function bump(it,catK,d){
+  var k=it.n;
+  if(!cart[k]) cart[k]={name:it.n,price:it.p,qty:0,cat:catK,treat:false};
+  cart[k].qty=Math.max(0,cart[k].qty+d);
+  if(cart[k].qty===0) delete cart[k];
+  saveDraft(); renderCats(); renderMenu(); syncBar();
+}
+
+function renderCombos(box){
+  var html='<div class="catname">🔥 套餐 <small>點下去挑鍋底/餃/丸/熱炒/主食</small></div><div class="list">';
+  COMBOS.forEach(function(c){
+    var lines=comboLines.filter(function(l){return l.comboId===c.id;});
+    html+='<div class="combo">'+
+      '<div class="ch"><span class="cn">'+esc(c.name)+'</span><span class="cp">'+money(c.price)+'</span></div>'+
+      '<div class="cd">'+esc(c.desc)+'｜附：'+esc(c.fixed.join("、"))+'</div>';
+    lines.forEach(function(l){
+      html+='<div class="added"><div class="ah">✓ 已加一份'+(l.treat?' · 招待':'')+'<span class="cnt">'+money(comboLineTotal(l))+'</span></div>'+
+        '<div class="adet">'+esc(comboDetailText(l))+'</div>'+
+        '<div class="abtns"><button data-edit="'+l.uid+'">✎ 改選配</button><button data-del="'+l.uid+'">✕ 移除</button></div></div>';
+    });
+    html+='<button class="addcombo" data-add="'+c.id+'">＋ 點這個套餐</button></div>';
+  });
+  html+='</div>';
+  box.innerHTML=html;
+  Array.prototype.forEach.call(box.querySelectorAll("[data-add]"),function(b){
+    b.addEventListener("click",function(){ openComboSheet(b.getAttribute("data-add"),null); });
+  });
+  Array.prototype.forEach.call(box.querySelectorAll("[data-edit]"),function(b){
+    b.addEventListener("click",function(){ var l=comboLines.filter(function(x){return x.uid===b.getAttribute("data-edit");})[0]; openComboSheet(l.comboId,l); });
+  });
+  Array.prototype.forEach.call(box.querySelectorAll("[data-del]"),function(b){
+    b.addEventListener("click",function(){ comboLines=comboLines.filter(function(x){return x.uid!==b.getAttribute("data-del");}); saveDraft(); renderCats(); renderMenu(); syncBar(); });
+  });
+}
+function comboDetailText(l){
+  var c=comboById(l.comboId),out=[];
+  c.choices.forEach(function(ch){
+    var v=l.sel[ch.key], label=ch.key.replace(/（.*/,"");
+    if(ch.type==="pot"){
+      if(v.mode==="yuanyang") out.push("鍋底：鴛鴦鍋（"+(v.picks.join("＋")||"—")+"）+"+YY_PRICE);
+      else out.push("鍋底："+(v.picks[0]||"—"));
+    }else if(ch.type==="beef"){
+      var base=ch.count-v.special, seg=[];
+      if(base>0)seg.push("上選×"+base);
+      if(v.special>0)seg.push("特選×"+v.special+"(+"+(v.special*BEEF_UP)+")");
+      out.push("溫體牛："+seg.join("、"));
+    }else if(ch.type==="qty"){
+      var parts=[];ch.from.forEach(function(o){var nm=o.n||o,p=o.p||0;if(v[nm])parts.push(nm+"×"+v[nm]+(p?"(+"+(p*v[nm])+")":""));});
+      out.push(label+"："+(parts.length?parts.join("、"):"—"));
+    }else{
+      out.push(label+"："+((v&&v.length)?v.join("、"):"—"));
+    }
+  });
+  var ups=[];for(var k in l.upgrades){if(l.upgrades[k])ups.push(k+(l.upgrades[k]>1?"×"+l.upgrades[k]:""));}
+  if(ups.length)out.push("加價："+ups.join("、"));
+  return out.join("\n");
+}
+
+/* ===================== 套餐選配 sheet ===================== */
+var draft=null;
+function openComboSheet(comboId,line){
+  var c=comboById(comboId);
+  draft=line?JSON.parse(JSON.stringify(line)):{uid:uid(),comboId:comboId,name:c.name,price:c.price,sel:{},upgrades:{},treat:false};
+  if(!line){ c.choices.forEach(function(ch){
+    draft.sel[ch.key]= ch.type==="qty"?{} : ch.type==="pot"?{mode:"single",picks:[]} : ch.type==="beef"?{special:0} : [];
+  }); }
+  renderComboSheet();
+}
+function renderComboSheet(){
+  var c=comboById(draft.comboId);
+  var html='<div class="grab"></div><h3>'+esc(c.name)+'<span class="hp">'+money(c.price)+'</span></h3>'+
+    '<div class="hsub">'+esc(c.desc)+'</div>'+
+    '<div class="fixed-list"><div class="ft">套餐固定附</div>'+esc(c.fixed.join("、"))+'</div>';
+  c.choices.forEach(function(ch,ci){
+    var v=draft.sel[ch.key];
+    var done,need;
+    if(ch.type==="pot"){
+      var yy=v.mode==="yuanyang";
+      done=yy?(v.picks.length>=2):(v.picks.length>=1);
+      need=yy?('鴛鴦鍋 '+v.picks.length+'/2'):(v.picks.length?'✓已選':'選 1 種');
+    }else if(ch.type==="beef"){
+      done=true; need='上選×'+(ch.count-v.special)+(v.special?'、特選×'+v.special:'');
+    }else if(ch.type==="qty"){ var sum=0;for(var nm in v)sum+=v[nm]; done=true; need='已選 '+sum+'/'+ch.total+'（可少點）'; }
+    else { done=(v.length>=ch.pick); need='選 '+v.length+'/'+ch.pick; }
+    html+='<div class="choice"><div class="cl">'+esc(ch.key)+'<span class="need '+(done?"ok":"wait")+'">'+(done&&ch.type!=="beef"?"✓ ":"")+need+'</span></div>';
+    if(ch.type==="pot"){
+      var yy=v.mode==="yuanyang";
+      html+='<div class="opts" style="margin-bottom:8px">'+
+        '<button class="opt'+(!yy?" on":"")+'" data-potmode="'+ci+'|single">'+(!yy?"✓ ":"")+'單鍋（三選一）</button>'+
+        '<button class="opt'+(yy?" on":"")+'" data-potmode="'+ci+'|yuanyang">'+(yy?"✓ ":"")+'鴛鴦鍋 +'+YY_PRICE+'（三選二）</button></div>';
+      html+='<div class="opts">';
+      ch.from.forEach(function(o){
+        var on=v.picks.indexOf(o)>=0;
+        var dim=(!on && yy && v.picks.length>=2);
+        html+='<button class="opt'+(on?" on":"")+(dim?" dim":"")+'" data-potpick="'+ci+'|'+esc(o)+'">'+(on?"✓ ":"")+esc(o)+'</button>';
+      });
+      html+='</div>'+(yy?'<div class="rdesc" style="margin-top:6px">鴛鴦鍋＝從三種鍋底選 2 種各半鍋</div>':'');
+    }else if(ch.type==="beef"){
+      html+='<div class="fixed-list" style="margin-bottom:8px"><div class="ft">套餐內含</div>上選溫體牛 ×'+ch.count+'</div>';
+      html+='<div class="optq'+(v.special?" on":"")+'"><span class="qn2">升級特選溫體牛 <span class="qp">+'+BEEF_UP+'／盤 · 限乙盤</span></span>'+
+        '<span class="miniq"><button data-beefm="'+ci+'">−</button><span>'+v.special+'</span><button data-beefp="'+ci+'">＋</button></span></div>';
+    }else if(ch.type==="qty"){
+      ch.from.forEach(function(o){
+        var nm=o.n||o, p=o.p||0, n=v[nm]||0;
+        html+='<div class="optq'+(n?" on":"")+'"><span class="qn2">'+esc(nm)+(p?' <span class="qp">+'+p+'</span>':'')+'</span>'+
+          '<span class="miniq"><button data-qm="'+ci+'|'+esc(nm)+'">−</button><span>'+n+'</span><button data-qp="'+ci+'|'+esc(nm)+'">＋</button></span></div>';
+      });
+    }else{
+      html+='<div class="opts">';
+      ch.from.forEach(function(o){
+        var on=v.indexOf(o)>=0;
+        var dim=(!on && ch.type==="check" && v.length>=ch.pick);
+        html+='<button class="opt'+(on?" on":"")+(dim?" dim":"")+'" data-pick="'+ci+'|'+esc(o)+'">'+(on?"✓ ":"")+esc(o)+'</button>';
+      });
+      html+='</div>';
+    }
+    html+='</div>';
+  });
+  // 加價升級
+  html+='<div class="choice"><div class="cl">加價升級（選填）</div>';
+  c.upgrades.forEach(function(u,ui){
+    var n=draft.upgrades[u.name]||0;
+    html+='<div class="optq'+(n?" on":"")+'"><span class="qn2">'+esc(u.name)+' <span class="qp">+'+u.price+'</span></span>'+
+      '<span class="miniq"><button data-um="'+ui+'">−</button><span>'+n+'</span><button data-up="'+ui+'">＋</button></span></div>';
+  });
+  html+='</div>';
+  var full=comboComplete(draft);
+  html+='<div class="sbtns">'+
+    (comboLines.filter(function(x){return x.uid===draft.uid;}).length?'<button class="sbtn rm" id="cb_rm">移除</button>':'')+
+    '<button class="sbtn sec" id="cb_cancel">取消</button>'+
+    '<button class="sbtn go" id="cb_ok"'+(full?"":" disabled")+'>'+(full?"加入這份套餐":"請先選滿必選項")+'</button></div>';
+  openSheet(html);
+
+  var sh=document.getElementById("sheet");
+  sh.querySelectorAll("[data-potmode]").forEach(function(b){b.addEventListener("click",function(){setPotMode(b.getAttribute("data-potmode"));});});
+  sh.querySelectorAll("[data-potpick]").forEach(function(b){b.addEventListener("click",function(){potPick(b.getAttribute("data-potpick"));});});
+  sh.querySelectorAll("[data-beefp]").forEach(function(b){b.addEventListener("click",function(){beefBump(+b.getAttribute("data-beefp"),1);});});
+  sh.querySelectorAll("[data-beefm]").forEach(function(b){b.addEventListener("click",function(){beefBump(+b.getAttribute("data-beefm"),-1);});});
+  sh.querySelectorAll("[data-pick]").forEach(function(b){b.addEventListener("click",function(){pickToggle(b.getAttribute("data-pick"));});});
+  sh.querySelectorAll("[data-qp]").forEach(function(b){b.addEventListener("click",function(){qtyBump(b.getAttribute("data-qp"),1);});});
+  sh.querySelectorAll("[data-qm]").forEach(function(b){b.addEventListener("click",function(){qtyBump(b.getAttribute("data-qm"),-1);});});
+  sh.querySelectorAll("[data-up]").forEach(function(b){b.addEventListener("click",function(){upBump(+b.getAttribute("data-up"),1);});});
+  sh.querySelectorAll("[data-um]").forEach(function(b){b.addEventListener("click",function(){upBump(+b.getAttribute("data-um"),-1);});});
+  document.getElementById("cb_cancel").addEventListener("click",closeSheet);
+  var rm=document.getElementById("cb_rm");if(rm)rm.addEventListener("click",function(){comboLines=comboLines.filter(function(x){return x.uid!==draft.uid;});closeSheet();saveDraft();renderCats();renderMenu();syncBar();});
+  document.getElementById("cb_ok").addEventListener("click",function(){
+    if(!comboComplete(draft))return;
+    var idx=-1;comboLines.forEach(function(x,i){if(x.uid===draft.uid)idx=i;});
+    if(idx>=0)comboLines[idx]=draft;else comboLines.push(draft);
+    closeSheet();saveDraft();renderCats();renderMenu();syncBar();toast("已加入套餐");
+  });
+}
+function pickToggle(code){
+  var p=code.split("|"),ci=+p[0],o=p[1];var c=comboById(draft.comboId),ch=c.choices[ci];var v=draft.sel[ch.key];
+  var i=v.indexOf(o);
+  if(i>=0)v.splice(i,1);
+  else{ if(ch.type==="radio")draft.sel[ch.key]=[o]; else if(v.length<ch.pick)v.push(o); else{toast("最多選 "+ch.pick+" 項");return;} }
+  renderComboSheet();
+}
+function qtyBump(code,d){
+  var p=code.split("|"),ci=+p[0],o=p[1];var c=comboById(draft.comboId),ch=c.choices[ci];var v=draft.sel[ch.key];
+  var sum=0;for(var nm in v)sum+=v[nm];
+  if(d>0&&sum>=ch.total){toast("共 "+ch.total+" 份已選滿");return;}
+  v[o]=Math.max(0,(v[o]||0)+d);if(!v[o])delete v[o];
+  renderComboSheet();
+}
+function setPotMode(code){
+  var p=code.split("|"),ci=+p[0],mode=p[1];var ch=comboById(draft.comboId).choices[ci];var v=draft.sel[ch.key];
+  if(v.mode!==mode){ v.mode=mode; var lim=mode==="yuanyang"?2:1; if(v.picks.length>lim)v.picks=v.picks.slice(0,lim); }
+  renderComboSheet();
+}
+function potPick(code){
+  var p=code.split("|"),ci=+p[0],o=p[1];var ch=comboById(draft.comboId).choices[ci];var v=draft.sel[ch.key];
+  var lim=v.mode==="yuanyang"?2:1, i=v.picks.indexOf(o);
+  if(i>=0)v.picks.splice(i,1);
+  else{ if(lim===1)v.picks=[o]; else if(v.picks.length<lim)v.picks.push(o); else{toast("鴛鴦鍋選 2 種");return;} }
+  renderComboSheet();
+}
+function beefBump(ci,d){
+  var ch=comboById(draft.comboId).choices[ci];var v=draft.sel[ch.key];
+  v.special=Math.max(0,Math.min(1,Math.min(ch.count,(v.special||0)+d)));  // 限乙盤
+  renderComboSheet();
+}
+function upBump(ui,d){
+  var c=comboById(draft.comboId),u=c.upgrades[ui];
+  draft.upgrades[u.name]=Math.max(0,(draft.upgrades[u.name]||0)+d);
+  if(!draft.upgrades[u.name])delete draft.upgrades[u.name];
+  renderComboSheet();
+}
+function comboComplete(l){
+  var c=comboById(l.comboId),ok=true;
+  c.choices.forEach(function(ch){
+    var v=l.sel[ch.key];
+    if(ch.type==="qty"||ch.type==="beef")return;   // 主食可不點滿；溫體牛內含免檢
+    if(ch.type==="pot"){ if(v.picks.length<(v.mode==="yuanyang"?2:1))ok=false; return; }
+    if(v.length<ch.pick)ok=false;
+  });
+  return ok;
+}
+
+/* ===================== 備餐單 ===================== */
+function openTicketSheet(){
+  saveDraft();
+  if(itemCount()===0){toast("還沒點任何東西");return;}
+  renderTicketSheet();
+}
+function renderTicketSheet(){
+  var t=ticket;
+  var head=[fmtDate(t.date)||todayStr(),t.room?("🚪"+t.room):"",t.pax?("👥"+t.pax+"人"):"",t.name?("🎉"+t.name):""].filter(Boolean).join("　");
+  var html='<div class="grab"></div><h3>📋 備餐單</h3><div class="hsub">確認內容→截圖或傳 LINE 給同事</div>';
+  html+='<div class="prev"><div class="pt">'+STORE+' 包廂備餐單</div><div class="ps">'+esc(head)+'</div>';
+
+  // 套餐
+  if(comboLines.length){
+    html+='<div class="pgrp"><div class="gt">套餐</div>';
+    comboLines.forEach(function(l){
+      html+='<div class="pit'+(l.treat?" treat":"")+'"><div class="pnm">'+esc(l.name)+
+        '<span class="sel">'+esc((comboById(l.comboId).fixed.length?comboById(l.comboId).fixed.join("、")+"\n":"")+comboDetailText(l))+'</span></div>'+
+        '<span class="pp">'+(l.treat?"招待":money(comboLineTotal(l)))+'</span>'+
+        '<button class="tg'+(l.treat?" on":"")+'" data-tc="'+l.uid+'">招待</button></div>';
+    });
+    html+='</div>';
+  }
+  // 單點（依分類）
+  CATS.forEach(function(cat){
+    var rows=cat.items.filter(function(it){return cart[it.n];});
+    if(!rows.length)return;
+    html+='<div class="pgrp"><div class="gt">'+esc(cat.k)+'</div>';
+    rows.forEach(function(it){
+      var c=cart[it.n];
+      html+='<div class="pit'+(c.treat?" treat":"")+'"><div class="pnm">'+esc(it.n)+'</div>'+
+        '<span class="pq">×'+c.qty+'</span>'+
+        '<span class="pp">'+(c.treat?"招待":money(c.price*c.qty))+'</span>'+
+        '<button class="tg'+(c.treat?" on":"")+'" data-ti="'+esc(it.n)+'">招待</button></div>';
+    });
+    html+='</div>';
+  });
+
+  var sub=cartTotal();
+  var svc=Math.round(sub*SERVICE);
+  var grand=sub+svc;
+  var pax=parseInt(t.pax,10)||0;
+  html+='<div class="ptot">'+
+    '<div class="ptr"><span>餐點小計（不含招待）</span><span>'+money(sub)+'</span></div>'+
+    '<div class="ptr"><span>服務費 10%</span><span>'+money(svc)+'</span></div>'+
+    '<div class="ptr grand"><span>合計</span><span>'+money(grand)+'</span></div>';
+  // 低消提示
+  var minTarget=ROOM_MIN;
+  if(sub<minTarget) html+='<div class="minhint under">⚠ 包廂低消 '+money(ROOM_MIN)+'，目前餐點 '+money(sub)+'，還差 '+money(minTarget-sub)+'</div>';
+  else html+='<div class="minhint pass">✓ 已達包廂低消 '+money(ROOM_MIN)+'</div>';
+  if(pax) html+='<div class="ptr" style="font-weight:600;color:var(--sub);font-size:12px;margin-top:2px"><span>個人低消 '+money(PERSON_MIN)+' × '+pax+' 人</span><span>= '+money(PERSON_MIN*pax)+'</span></div>';
+  html+='</div></div>';
+
+  html+='<div class="sbtns"><button class="sbtn sec" id="tk_close">返回</button>'+
+    '<button class="sbtn go" id="tk_line">📋 複製／傳 LINE</button></div>';
+  openSheet(html);
+
+  var sh=document.getElementById("sheet");
+  sh.querySelectorAll("[data-tc]").forEach(function(b){b.addEventListener("click",function(){var l=comboLines.filter(function(x){return x.uid===b.getAttribute("data-tc");})[0];l.treat=!l.treat;saveDraft();renderTicketSheet();});});
+  sh.querySelectorAll("[data-ti]").forEach(function(b){b.addEventListener("click",function(){var k=b.getAttribute("data-ti");cart[k].treat=!cart[k].treat;saveDraft();renderTicketSheet();});});
+  document.getElementById("tk_close").addEventListener("click",closeSheet);
+  document.getElementById("tk_line").addEventListener("click",shareTicket);
+}
+function ticketText(){
+  var t=ticket,L=[];
+  L.push("🐂 "+STORE+" 包廂備餐單");
+  var head=[fmtDate(t.date)||todayStr(),t.room?("包廂:"+t.room):"",t.pax?(t.pax+"人"):"",t.name||""].filter(Boolean).join("　");
+  L.push(head);L.push("──────────");
+  if(comboLines.length){
+    L.push("【套餐】");
+    comboLines.forEach(function(l){
+      L.push("● "+l.name+(l.treat?"（招待）":"")+"  "+(l.treat?"":money(comboLineTotal(l))));
+      if(comboById(l.comboId).fixed.length) L.push("   附："+comboById(l.comboId).fixed.join("、"));
+      comboDetailText(l).split("\n").forEach(function(x){L.push("   "+x);});
+    });
+  }
+  CATS.forEach(function(cat){
+    var rows=cat.items.filter(function(it){return cart[it.n];});
+    if(!rows.length)return;
+    L.push("【"+cat.k+"】");
+    rows.forEach(function(it){var c=cart[it.n];L.push("・"+it.n+" ×"+c.qty+(c.treat?"（招待）":"  "+money(c.price*c.qty)));});
+  });
+  L.push("──────────");
+  var sub=cartTotal(),svc=Math.round(sub*SERVICE);
+  L.push("小計 "+money(sub)+"　服務費 "+money(svc)+"　合計 "+money(sub+svc));
+  if(sub<ROOM_MIN)L.push("⚠ 包廂低消"+money(ROOM_MIN)+"，還差"+money(ROOM_MIN-sub));
+  return L.join("\n");
+}
+function shareTicket(){
+  var txt=ticketText();
+  var done=function(){toast("已複製，可貼到 LINE");};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,function(){fallbackCopy(txt);done();});}
+  else{fallbackCopy(txt);done();}
+  setTimeout(function(){ window.open("https://line.me/R/msg/text/?"+encodeURIComponent(txt),"_blank"); },300);
+}
+function fallbackCopy(txt){var ta=document.createElement("textarea");ta.value=txt;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");}catch(e){}document.body.removeChild(ta);}
+
+/* ===================== 共用 ===================== */
+function fmtDate(s){if(!s)return"";var p=s.split("-");return p.length===3?(+p[1])+"/"+(+p[2]):s;}
+function openSheet(html){var sh=document.getElementById("sheet");sh.innerHTML=html;document.getElementById("mask").classList.add("show");sh.classList.add("show");}
+function closeSheet(){document.getElementById("mask").classList.remove("show");document.getElementById("sheet").classList.remove("show");}
+function syncBar(){
+  var n=itemCount();
+  document.getElementById("cartCount").textContent=n?("已點 "+n+" 項"):"尚未點餐";
+  document.getElementById("cartTotal").textContent=money(cartTotal());
+}
+function clearAll(btn){
+  if(itemCount()===0){toast("目前是空的");return;}
+  if(btn._armed){clearTimeout(btn._t);btn._armed=false;cart={};comboLines=[];saveDraft();renderCats();renderMenu();syncBar();toast("已清空");return;}
+  btn._armed=true;btn._old=btn.textContent;btn.textContent="⚠";toast("再按一次清空整單");
+  btn._t=setTimeout(function(){btn._armed=false;btn.textContent=btn._old;},3000);
+}
+
+/* ===================== 啟動 ===================== */
+["t_date","t_room","t_pax","t_name"].forEach(function(id){document.getElementById(id).addEventListener("input",saveDraft);});
+document.getElementById("viewBtn").addEventListener("click",openTicketSheet);
+document.getElementById("clearBtn").addEventListener("click",function(){clearAll(this);});
+document.getElementById("mask").addEventListener("click",closeSheet);
+
+loadDraft();
+document.getElementById("t_date").value=ticket.date||todayStr();
+document.getElementById("t_room").value=ticket.room||"";
+document.getElementById("t_pax").value=ticket.pax||"";
+document.getElementById("t_name").value=ticket.name||"";
+renderCats();renderMenu();syncBar();
+</script>
+</body>
+</html>
