@@ -29,6 +29,11 @@
     justify-content:center;font-size:24px;box-shadow:var(--shadow)}
   .brand h1{font-size:19px;margin:0;font-weight:800;letter-spacing:.5px}
   .brand .tag{font-size:11.5px;color:var(--sub);margin-top:2px;font-weight:600}
+  .refreshbtn{margin-left:auto;display:flex;flex-direction:column;align-items:center;gap:1px;
+    border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:7px 11px;font-size:17px;
+    cursor:pointer;font-family:inherit;color:var(--ink);line-height:1;box-shadow:var(--shadow)}
+  .refreshbtn:active{background:var(--orange-soft)}
+  .refreshbtn span{font-size:9.5px;color:var(--sub);font-weight:800;letter-spacing:.3px}
 
   /* 桌單資訊 */
   .ticket{background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:6px 6px;margin:12px 0 8px}
@@ -188,6 +193,7 @@
       <h1>潮牛殿 · 包廂點餐</h1>
       <div class="tag">先點好 → 出備餐單 → 傳同事備餐</div>
     </div>
+    <button class="refreshbtn" id="refreshBtn" title="抓最新版">🔄<span id="appver"></span></button>
   </div>
 </header>
 
@@ -220,6 +226,7 @@
 
 <script>
 /* ===================== 菜單資料 ===================== */
+var APP_VER="v4 · 7/24";   // 每次改版都把這個號碼往上加，方便手機確認有沒有抓到新版
 var STORE="潮牛殿", ROOM_MIN=10000, PERSON_MIN=700, SERVICE=0.10;
 var YY_PRICE=100, BEEF_UP=100;   // 鴛鴦鍋加價、上選升特選加價
 var COMBOS=[
@@ -708,6 +715,11 @@ document.getElementById("t_note").addEventListener("input",autoGrowNote);
 document.getElementById("viewBtn").addEventListener("click",openTicketSheet);
 document.getElementById("clearBtn").addEventListener("click",function(){clearAll(this);});
 document.getElementById("mask").addEventListener("click",closeSheet);
+document.getElementById("appver").textContent=APP_VER;
+document.getElementById("refreshBtn").addEventListener("click",function(){
+  toast("抓取最新版…");
+  setTimeout(function(){ location.replace(location.pathname+"?v="+Date.now()); },250);
+});
 
 loadDraft();
 document.getElementById("t_date").value=ticket.date||todayStr();
